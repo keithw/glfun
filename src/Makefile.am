@@ -3,4 +3,4 @@ AM_CXXFLAGS = $(PICKY_CXXFLAGS) $(NODEBUG_CXXFLAGS)
 LDADD = $(X11_XCB_LIBS) $(GLU_LIBS)
 bin_PROGRAMS = glfun
 
-glfun_SOURCES = main.cc
+glfun_SOURCES = main.cc display.hh display.cc
