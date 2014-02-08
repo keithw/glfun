@@ -3,6 +3,9 @@
 #include <chrono>
 #include <thread>
 
+#define GLEW_STATIC
+
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 using namespace std;
@@ -21,6 +24,18 @@ int main( int argc, char *argv[] )
   return EXIT_SUCCESS;
 }
 
+class GLFWContext
+{
+public:
+  GLFWContext() { glfwInit(); }
+  ~GLFWContext() { glfwTerminate(); }
+};
+
+void error_callback( const int, const char * const description )
+{
+  throw runtime_error( description );
+}
+
 void glfun( int argc, char *argv[] )
 {
   if ( argc < 1 ) {
@@ -28,11 +43,35 @@ void glfun( int argc, char *argv[] )
   } else if ( argc != 1 ) {
     cerr << "Usage: " << argv[ 0 ] << endl;
     throw runtime_error( "bad command-line arguments" );
-}
+  }
 
-  glfwInit();
+  glfwSetErrorCallback( error_callback );
 
-  this_thread::sleep_for( chrono::seconds( 2 ) );
+  GLFWContext glfw_context;
 
-  glfwTerminate();
+  glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
+  glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+  glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
+
+  glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
+
+  GLFWwindow * window = glfwCreateWindow( 640, 480, "OpenGL Fun", nullptr, nullptr );
+  if ( window == nullptr ) {
+    throw runtime_error( "could not create window" );
+  }
+
+  glfwMakeContextCurrent( window );
+
+  glewExperimental = GL_TRUE;
+  glewInit();
+
+  GLuint vertexBuffer;
+  glGenBuffers(1, &vertexBuffer);
+
+  printf("%u\n", vertexBuffer);
+
+  while ( not glfwWindowShouldClose( window ) ) {
+    glfwSwapBuffers( window );
+    glfwPollEvents();
+  }
 }
