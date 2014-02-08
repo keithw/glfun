@@ -3,10 +3,7 @@
 #include <chrono>
 #include <thread>
 
-#define GLEW_STATIC
-
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "gl_objects.hh"
 
 using namespace std;
 
@@ -24,18 +21,6 @@ int main( int argc, char *argv[] )
   return EXIT_SUCCESS;
 }
 
-class GLFWContext
-{
-public:
-  GLFWContext() { glfwInit(); }
-  ~GLFWContext() { glfwTerminate(); }
-};
-
-void error_callback( const int, const char * const description )
-{
-  throw runtime_error( description );
-}
-
 void glfun( int argc, char *argv[] )
 {
   if ( argc < 1 ) {
@@ -45,33 +30,21 @@ void glfun( int argc, char *argv[] )
     throw runtime_error( "bad command-line arguments" );
   }
 
-  glfwSetErrorCallback( error_callback );
+  glfwSetErrorCallback( []( const int, const char * const description )
+			{ throw runtime_error( description ); } );
 
   GLFWContext glfw_context;
 
-  glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
-  glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
-  glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
-
-  glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
-
-  GLFWwindow * window = glfwCreateWindow( 640, 480, "OpenGL Fun", nullptr, nullptr );
-  if ( window == nullptr ) {
-    throw runtime_error( "could not create window" );
-  }
-
-  glfwMakeContextCurrent( window );
+  Window window( 640, 480, "OpenGL fun" );
+  window.make_context_current();
 
   glewExperimental = GL_TRUE;
   glewInit();
 
-  GLuint vertexBuffer;
-  glGenBuffers(1, &vertexBuffer);
+  VertexBuffer vbo;
 
-  printf("%u\n", vertexBuffer);
-
-  while ( not glfwWindowShouldClose( window ) ) {
-    glfwSwapBuffers( window );
+  while ( not window.should_close() ) {
+    window.swap_buffers();
     glfwPollEvents();
   }
 }
