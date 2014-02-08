@@ -18,12 +18,10 @@ AC_SUBST([PICKY_CXXFLAGS])
 AC_LANG_PUSH(C++)
 
 # Checks for libraries.
-PKG_CHECK_MODULES([X11_XCB], [x11-xcb])
-PKG_CHECK_MODULES([GLU], [glu])
+PKG_CHECK_MODULES([GLFW], [glfw3])
+PKG_CHECK_MODULES([GLEW], [glew])
 
 # Checks for header files.
-AC_PATH_X
-AC_CHECK_HEADERS([fcntl.h unistd.h], [], [AC_MSG_ERROR([Missing required header file])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -38,8 +36,6 @@ AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
 # Checks for library functions.
-AC_FUNC_MMAP
-AC_CHECK_FUNCS([munmap strerror], [], [AC_MSG_ERROR([Missing required library function])])
 
 AC_LANG_POP(C++)
 

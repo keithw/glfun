@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 
-#include "display.hh"
+#include <GLFW/glfw3.h>
 
 using namespace std;
 
@@ -28,9 +28,11 @@ void glfun( int argc, char *argv[] )
   } else if ( argc != 1 ) {
     cerr << "Usage: " << argv[ 0 ] << endl;
     throw runtime_error( "bad command-line arguments" );
-  }
+}
 
-  VideoDisplay display( 640, 480 );
+  glfwInit();
 
   this_thread::sleep_for( chrono::seconds( 2 ) );
+
+  glfwTerminate();
 }
