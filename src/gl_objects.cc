@@ -7,10 +7,14 @@ using namespace std;
 
 GLFWContext::GLFWContext()
 {
-  glfwSetErrorCallback( []( const int, const char * const description )
-			{ throw runtime_error( description ); } );
+  glfwSetErrorCallback( error_callback );
 
   glfwInit();
+}
+
+void GLFWContext::error_callback( const int, const char * const description )
+{
+  throw runtime_error( description );
 }
 
 GLFWContext::~GLFWContext()
@@ -39,9 +43,12 @@ void Window::make_context_current( const bool initialize_extensions )
 {
   glfwMakeContextCurrent( window_ );
 
+  glCheck( "after MakeContextCurrent" );
+
   if ( initialize_extensions ) {
     glewExperimental = GL_TRUE;
     glewInit();
+    glCheck( "after initializing GLEW", true );
   }
 }
 
@@ -72,6 +79,27 @@ VertexBufferObject::VertexBufferObject()
   glGenBuffers( 1, &num_ );
 }
 
+VertexBufferObject::~VertexBufferObject()
+{
+  glDeleteBuffers( 1, &num_ );
+}
+
+VertexArrayObject::VertexArrayObject()
+  : num_()
+{
+  glGenVertexArrays( 1, &num_ );
+}
+
+VertexArrayObject::~VertexArrayObject()
+{
+  glDeleteVertexArrays( 1, &num_ );
+}
+
+void VertexArrayObject::bind( void )
+{
+  glBindVertexArray( num_ );
+}
+
 void compile_shader( const GLuint num, const string & source )
 {
   const char * source_c_str = source.c_str();
@@ -100,5 +128,43 @@ void compile_shader( const GLuint num, const string & source )
 
   if ( not success ) {
     throw runtime_error( "GL shader failed to compile" );
+  }
+}
+
+void Program::link( void )
+{
+  glLinkProgram( num_ );
+}
+
+void Program::use( void )
+{
+  glUseProgram( num_ );
+}
+
+GLint Program::attribute_location( const std::string & name )
+{
+  return glGetAttribLocation( num_, name.c_str() );
+}
+
+Program::~Program()
+{
+  glDeleteProgram( num_ );
+}
+
+void glCheck( const string & where, const bool expected )
+{
+  GLenum error = glGetError();
+
+  if ( error != GL_NO_ERROR ) {
+    while ( error != GL_NO_ERROR ) {
+      if ( not expected ) {
+	cerr << "GL error " << where << ": " << gluErrorString( error ) << endl;
+      }
+      error = glGetError();
+    }
+
+    if ( not expected ) {
+      throw runtime_error( "GL error " + where );
+    }
   }
 }

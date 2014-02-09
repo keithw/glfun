@@ -10,9 +10,12 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <iostream>
 
 class GLFWContext
 {
+  static void error_callback( const int, const char * const description );
+
 public:
   GLFWContext();
   ~GLFWContext();
@@ -36,29 +39,21 @@ public:
   Window & operator=( const Window & other ) = delete;
 };
 
-class VertexBufferObject
-{
-  GLuint num_;
-
-public:
-  VertexBufferObject();
-
-  template <class BufferType>
-  void bind( void ) { glBindBuffer( BufferType::id, num_ ); }
-
-  /* forbid copy */
-  VertexBufferObject( const VertexBufferObject & other ) = delete;
-  VertexBufferObject & operator=( const VertexBufferObject & other ) = delete;
-};
-
 template <GLenum id_>
 class Buffer
 {
 public:
   Buffer() = delete;
-  static void load( const std::vector<std::pair<float, float>> & vertices, const GLenum usage )
+
+  template <class T>
+  static void bind( const T & obj )
   {
-    glBufferData( id, vertices.size(), &vertices.front(), usage );
+    glBindBuffer( id_, obj.num_ );
+  }
+
+  static void load( const std::vector<float> & vertices, const GLenum usage )
+  {
+    glBufferData( id, vertices.size() * sizeof( float ), &vertices.front(), usage );
   }
 
   constexpr static GLenum id = id_;
@@ -66,11 +61,43 @@ public:
 
 using ArrayBuffer = Buffer<GL_ARRAY_BUFFER>;
 
+class VertexBufferObject
+{
+  friend ArrayBuffer;
+
+  GLuint num_;
+
+public:
+  VertexBufferObject();
+  ~VertexBufferObject();
+
+  /* forbid copy */
+  VertexBufferObject( const VertexBufferObject & other ) = delete;
+  VertexBufferObject & operator=( const VertexBufferObject & other ) = delete;
+};
+
+class VertexArrayObject
+{
+  GLuint num_;
+
+public:
+  VertexArrayObject();
+  ~VertexArrayObject();
+
+  void bind( void );
+
+  /* forbid copy */
+  VertexArrayObject( const VertexArrayObject & other ) = delete;
+  VertexArrayObject & operator=( const VertexArrayObject & other ) = delete;
+};
+
 void compile_shader( const GLuint num, const std::string & source );
 
 template <GLenum type_>
 class Shader
 {
+  friend class Program;
+
   GLuint num_ = glCreateShader( type_ );
 
 public:
@@ -79,11 +106,43 @@ public:
     compile_shader( num_, source );
   }
 
+  ~Shader()
+  {
+    glDeleteShader( num_ );
+  }
+
   /* forbid copy */
   Shader( const Shader & other ) = delete;
   Shader & operator=( const Shader & other ) = delete;
 };
 
-using VertexShader = Shader<GL_VERTEX_SHADER>;
+class Program
+{
+  GLuint num_ = glCreateProgram();
+
+public:
+  Program() {}
+  ~Program();
+
+  template <GLenum type_>
+  void attach( const Shader<type_> & shader )
+  {
+    glAttachShader( num_, shader.num_ );
+  }
+
+  void link( void );
+  void use( void );
+
+  GLint attribute_location( const std::string & name );
+
+  /* forbid copy */
+  Program( const Program & other ) = delete;
+  Program & operator=( const Program & other ) = delete;
+};
+
+using VertexShader   = Shader<GL_VERTEX_SHADER>;
+using FragmentShader = Shader<GL_FRAGMENT_SHADER>;
+
+void glCheck( const std::string & where, const bool expected = false );
 
 #endif /* GL_OBJECTS_HH */

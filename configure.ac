@@ -18,8 +18,10 @@ AC_SUBST([PICKY_CXXFLAGS])
 AC_LANG_PUSH(C++)
 
 # Checks for libraries.
+PKG_CHECK_MODULES([GL], [gl])
 PKG_CHECK_MODULES([GLFW], [glfw3])
 PKG_CHECK_MODULES([GLEW], [glew])
+PKG_CHECK_MODULES([GLU], [glu])
 
 # Checks for header files.
 
