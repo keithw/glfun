@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <iostream>
-#include <chrono>
-#include <thread>
+#include <vector>
+#include <stdexcept>
 
 #include "gl_objects.hh"
 
@@ -30,21 +30,39 @@ void glfun( int argc, char *argv[] )
     throw runtime_error( "bad command-line arguments" );
   }
 
-  glfwSetErrorCallback( []( const int, const char * const description )
-			{ throw runtime_error( description ); } );
-
   GLFWContext glfw_context;
 
   Window window( 640, 480, "OpenGL fun" );
-  window.make_context_current();
+  window.make_context_current( true );
 
-  glewExperimental = GL_TRUE;
-  glewInit();
+  vector< pair< float, float > > vertices;
 
-  VertexBuffer vbo;
+  vertices.emplace_back(  0.0,  0.5 );
+  vertices.emplace_back(  0.5, -0.5 );
+  vertices.emplace_back( -0.5, -0.5 );
+
+  VertexBufferObject vbo;
+
+  vbo.bind<ArrayBuffer>();
+  ArrayBuffer::load( vertices, GL_STREAM_DRAW );
+
+  VertexShader shader( R"(
+      #version 140
+
+      in vec2 position;
+
+      void main()
+      {
+	gl_Position = vec4( position, 0.0, 1.0 );
+      }
+    )" );
 
   while ( not window.should_close() ) {
     window.swap_buffers();
     glfwPollEvents();
+
+    if ( window.key_pressed( GLFW_KEY_ESCAPE ) ) {
+      break;
+    }
   }
 }
