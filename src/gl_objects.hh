@@ -31,6 +31,7 @@ public:
   bool should_close( void ) const;
   void swap_buffers( void );
   bool key_pressed( const int key ) const;
+  std::pair<int, int> size( void ) const;
 
   ~Window();
 
@@ -51,9 +52,9 @@ public:
     glBindBuffer( id_, obj.num_ );
   }
 
-  static void load( const std::vector<float> & vertices, const GLenum usage )
+  static void load( const std::vector<std::pair<float,float>> & vertices, const GLenum usage )
   {
-    glBufferData( id, vertices.size() * sizeof( float ), &vertices.front(), usage );
+    glBufferData( id, vertices.size() * sizeof( std::pair<float, float> ), &vertices.front(), usage );
   }
 
   constexpr static GLenum id = id_;

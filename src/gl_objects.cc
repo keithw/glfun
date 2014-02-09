@@ -30,7 +30,7 @@ Window::Window( const unsigned int width, const unsigned int height, const strin
   glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
   glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
   glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
-
+  glfwWindowHint( GLFW_SAMPLES, 4 );
   glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
 
   window_ = glfwCreateWindow( width, height, title.c_str(), nullptr, nullptr );
@@ -65,6 +65,13 @@ void Window::swap_buffers( void )
 bool Window::key_pressed( const int key ) const
 {
   return GLFW_PRESS == glfwGetKey( window_, key );
+}
+
+std::pair<int, int> Window::size( void ) const
+{
+  int width, height;
+  glfwGetWindowSize( window_, &width, &height );
+  return make_pair( width, height );
 }
 
 Window::~Window()
