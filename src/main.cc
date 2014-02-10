@@ -34,17 +34,21 @@ void glfun( int argc, char *argv[] )
   }
 
   GLFWContext glfw_context;
-  Window window( 640, 480, "OpenGL fun" );
+  Window window( 800, 800, "OpenGL fun" );
   window.make_context_current( true );
 
-  vector<pair<float, float>> vertices = { { 0.0,  0.5 },
-					  { 0.5, -0.5 },
-					  {-0.5, -0.5 } };
+  vector<pair<float, float>> vertices = { { 0.0,  0.0 },
+					  { 0.1, -0.3 },
+					  { 0.2, -0.2 },
+					  { 0.3, -0.4 },
+					  { 0.4, -0.2 },
+					  { 0.4,  0.2 },
+					  { 0.5,  0.2 },
+					  { 0.5, -0.2 } };
 
   VertexBufferObject vbo;
 
   ArrayBuffer::bind( vbo );
-  ArrayBuffer::load( vertices, GL_STREAM_DRAW );
 
   glCheck( "after loading vertices" );
 
@@ -66,7 +70,7 @@ void glfun( int argc, char *argv[] )
 
       void main()
       {
-        outColor = vec4( 1.0, 0.2, 1.0, 1.0 );
+        outColor = vec4( 1.0, 0.2, 1.0, 0.5 );
       }
     )" );
 
@@ -75,6 +79,9 @@ void glfun( int argc, char *argv[] )
   program.attach( fragment_shader );
   program.link();
   program.use();
+
+  glEnable( GL_BLEND );
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glCheck( "after using shader program" );
 
@@ -92,9 +99,72 @@ void glfun( int argc, char *argv[] )
 
   pair<int, int> last_size = window.size();
 
+  const float width = 0.04;
+
   while ( not window.should_close() ) {
+    for ( auto & x : vertices ) {
+            x = make_pair( x.first * cos( .0001 ) - x.second * sin( .0001 ),
+			   x.first * sin( .0001 ) + x.second * cos( .0001 ) );
+    }
+
+    vector<pair<float, float>> triangles;
+
+    for ( auto it = vertices.begin(); it < vertices.end() - 1; it++ ) {
+      const auto & start = *it;
+      const auto & end = *(it + 1);
+
+      double rise = (end.second - start.second);
+      double run  = (end.first - start.first);
+
+      const double scale_factor = sqrt( rise * rise + run * run );
+
+      rise /= scale_factor;
+      run /= scale_factor;
+
+      rise *= width;
+      run *= width;
+
+      triangles.emplace_back( start.first - rise, start.second + run );
+      triangles.emplace_back( start.first + rise, start.second - run );
+      triangles.emplace_back( end.first + rise, end.second - run );
+
+      triangles.emplace_back( start.first - rise, start.second + run );
+      triangles.emplace_back( end.first - rise, end.second + run );
+      triangles.emplace_back( end.first + rise, end.second - run );
+
+      if ( it < vertices.end() - 2 ) {
+	const auto & next = *(it + 2);
+
+	double new_rise = (next.second - end.second);
+	double new_run = (next.first - end.first);
+
+	const double new_scale_factor = sqrt( new_rise * new_rise + new_run * new_run );
+
+	new_rise /= new_scale_factor;
+	new_run /= new_scale_factor;
+
+	new_rise *= width;
+	new_run *= width;
+
+	int run_sign = run >= 0 ? 1 : -1;
+	int new_run_sign = new_run >= 0 ? 1 : -1;
+
+	if ( run_sign * new_rise < new_run_sign * rise ) {
+	  triangles.emplace_back( end.first - rise, end.second + run );
+	  triangles.emplace_back( end.first, end.second );
+	  triangles.emplace_back( end.first - new_rise, end.second + new_run );
+	} else {
+	  triangles.emplace_back( end.first + rise, end.second - run );
+	  triangles.emplace_back( end.first, end.second );
+	  triangles.emplace_back( end.first + new_rise, end.second - new_run );
+	}
+      }
+    }
+
+    ArrayBuffer::load( triangles, GL_STREAM_DRAW );
+
     glClear( GL_COLOR_BUFFER_BIT );
-    glDrawArrays( GL_LINE_LOOP, 0, 3 );
+    glDrawArrays( GL_TRIANGLES, 0, triangles.size() );
 
     window.swap_buffers();
     glfwPollEvents();
@@ -108,12 +178,5 @@ void glfun( int argc, char *argv[] )
       glViewport( 0, 0, current_size.first, current_size.second );
       last_size = current_size;
     }
-
-    for ( auto & x : vertices ) {
-      x = make_pair( x.first * cos( .01 ) - x.second * sin( .01 ),
-		     x.first * sin( .01 ) + x.second * cos( .01 ) );
-    }
-
-    ArrayBuffer::load( vertices, GL_STREAM_DRAW );
   }
 }

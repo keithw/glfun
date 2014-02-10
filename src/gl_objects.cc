@@ -70,7 +70,7 @@ bool Window::key_pressed( const int key ) const
 std::pair<int, int> Window::size( void ) const
 {
   int width, height;
-  glfwGetWindowSize( window_, &width, &height );
+  glfwGetFramebufferSize( window_, &width, &height );
   return make_pair( width, height );
 }
 
