@@ -92,6 +92,29 @@ public:
   VertexArrayObject & operator=( const VertexArrayObject & other ) = delete;
 };
 
+struct Pixel
+{
+  uint8_t red, green, blue, alpha;
+};
+
+class Texture
+{
+  GLuint num_;
+
+  unsigned int width_, height_;
+
+public:
+  Texture( const unsigned int width, const unsigned int height);
+  ~Texture();
+
+  void bind( void );
+  void load( const std::vector< Pixel > & pixels );
+
+  /* disallow copy */
+  Texture( const Texture & other ) = delete;
+  Texture & operator=( const Texture & other ) = delete;
+};
+
 void compile_shader( const GLuint num, const std::string & source );
 
 template <GLenum type_>

@@ -107,6 +107,36 @@ void VertexArrayObject::bind( void )
   glBindVertexArray( num_ );
 }
 
+Texture::Texture( const unsigned int width, const unsigned int height )
+  : num_(),
+    width_( width ),
+    height_( height )
+{
+  glGenTextures( 1, &num_ );
+}
+
+Texture::~Texture()
+{
+  glDeleteTextures( 1, &num_ );
+}
+
+void Texture::bind( void )
+{
+  glBindTexture( GL_TEXTURE_RECTANGLE, num_ );
+  glTexImage2D( GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, width_, height_, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, nullptr );
+}
+
+void Texture::load( const std::vector< Pixel > & pixels )
+{
+  if ( pixels.size() != width_ * height_ ) {
+    throw runtime_error( "vector size does not match texture dimensions" );
+  }
+
+  glTexSubImage2D( GL_TEXTURE_RECTANGLE, 0, 0, 0, width_, height_,
+		   GL_RGBA, GL_UNSIGNED_BYTE, &pixels.front() );
+}
+
 void compile_shader( const GLuint num, const string & source )
 {
   const char * source_c_str = source.c_str();
