@@ -135,6 +135,7 @@ public:
   void use( void );
 
   GLint attribute_location( const std::string & name );
+  GLint uniform_location( const std::string & name );
 
   /* forbid copy */
   Program( const Program & other ) = delete;

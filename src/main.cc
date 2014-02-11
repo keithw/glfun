@@ -37,14 +37,10 @@ void glfun( int argc, char *argv[] )
   Window window( 800, 800, "OpenGL fun" );
   window.make_context_current( true );
 
-  vector<pair<float, float>> vertices = { { 0.0,  0.0 },
-					  { 0.1, -0.3 },
-					  { 0.2, -0.2 },
-					  { 0.3, -0.4 },
-					  { 0.4, -0.2 },
-					  { 0.4,  0.2 },
-					  { 0.5,  0.2 },
-					  { 0.5, -0.2 } };
+  vector<pair<float, float>> vertices = { { 0, 0 },
+					  { 100, 0 },
+					  { 100, 100 },
+					  { 200, 100 } };
 
   VertexBufferObject vbo;
 
@@ -55,11 +51,12 @@ void glfun( int argc, char *argv[] )
   VertexShader vertex_shader( R"(
       #version 140
 
+      uniform vec2 window_size;
       in vec2 position;
 
       void main()
       {
-	gl_Position = vec4( position, 0.0, 1.0 );
+	gl_Position = vec4( position.x / window_size.x, position.y / window_size.y, 0.0, 1.0 );
       }
     )" );
 
@@ -81,7 +78,7 @@ void glfun( int argc, char *argv[] )
   program.use();
 
   glEnable( GL_BLEND );
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
   glCheck( "after using shader program" );
 
@@ -99,7 +96,10 @@ void glfun( int argc, char *argv[] )
 
   pair<int, int> last_size = window.size();
 
-  const float width = 0.04;
+  glViewport( 0, 0, last_size.first, last_size.second );
+  glUniform2f( program.uniform_location( "window_size" ), last_size.first, last_size.second );
+
+  const float width = 20;
 
   while ( not window.should_close() ) {
     for ( auto & x : vertices ) {
@@ -177,6 +177,9 @@ void glfun( int argc, char *argv[] )
     if ( current_size != last_size ) {
       glViewport( 0, 0, current_size.first, current_size.second );
       last_size = current_size;
+      glUniform2f( program.uniform_location( "window_size" ), last_size.first, last_size.second );
     }
   }
+
+  glCheck( "inside loop" );
 }

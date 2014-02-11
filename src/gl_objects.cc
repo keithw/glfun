@@ -153,6 +153,11 @@ GLint Program::attribute_location( const std::string & name )
   return glGetAttribLocation( num_, name.c_str() );
 }
 
+GLint Program::uniform_location( const std::string & name )
+{
+  return glGetUniformLocation( num_, name.c_str() );
+}
+
 Program::~Program()
 {
   glDeleteProgram( num_ );
