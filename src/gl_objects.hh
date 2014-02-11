@@ -31,7 +31,7 @@ public:
   bool should_close( void ) const;
   void swap_buffers( void );
   bool key_pressed( const int key ) const;
-  std::pair<int, int> size( void ) const;
+  std::pair<unsigned int, unsigned int> size( void ) const;
 
   ~Window();
 
@@ -108,7 +108,7 @@ public:
   ~Texture();
 
   void bind( void );
-  void load( const std::vector< Pixel > & pixels );
+  void load( const std::vector<Pixel> & pixels );
 
   /* disallow copy */
   Texture( const Texture & other ) = delete;

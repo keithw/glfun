@@ -30,7 +30,7 @@ Window::Window( const unsigned int width, const unsigned int height, const strin
   glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
   glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
   glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
-  glfwWindowHint( GLFW_SAMPLES, 4 );
+  //  glfwWindowHint( GLFW_SAMPLES, 4 );
   glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
 
   window_ = glfwCreateWindow( width, height, title.c_str(), nullptr, nullptr );
@@ -67,11 +67,16 @@ bool Window::key_pressed( const int key ) const
   return GLFW_PRESS == glfwGetKey( window_, key );
 }
 
-std::pair<int, int> Window::size( void ) const
+pair<unsigned int, unsigned int> Window::size( void ) const
 {
   int width, height;
   glfwGetFramebufferSize( window_, &width, &height );
-  return make_pair( width, height );
+
+  if ( width < 0 or height < 0 ) {
+    throw runtime_error( "negative framebuffer width or height" );
+  }
+
+  return pair<unsigned int, unsigned int>( width, height );
 }
 
 Window::~Window()
@@ -127,7 +132,7 @@ void Texture::bind( void )
 		GL_RGBA, GL_UNSIGNED_BYTE, nullptr );
 }
 
-void Texture::load( const std::vector< Pixel > & pixels )
+void Texture::load( const vector<Pixel> & pixels )
 {
   if ( pixels.size() != width_ * height_ ) {
     throw runtime_error( "vector size does not match texture dimensions" );
@@ -148,12 +153,12 @@ void compile_shader( const GLuint num, const string & source )
   glGetShaderiv( num, GL_INFO_LOG_LENGTH, &log_length );
 
   if ( log_length > 1 ) {
-    std::unique_ptr<GLchar> buffer( new GLchar[ log_length ] );
+    unique_ptr<GLchar> buffer( new GLchar[ log_length ] );
     GLsizei written_length;
     glGetShaderInfoLog( num, log_length, &written_length, buffer.get() );
 
     if ( written_length + 1 != log_length ) {
-      throw std::runtime_error( "GL shader log size mismatch" );
+      throw runtime_error( "GL shader log size mismatch" );
     }
 
     cerr << "GL shader compilation log: " << string( buffer.get(), log_length ) << endl;
@@ -178,12 +183,12 @@ void Program::use( void )
   glUseProgram( num_ );
 }
 
-GLint Program::attribute_location( const std::string & name )
+GLint Program::attribute_location( const string & name )
 {
   return glGetAttribLocation( num_, name.c_str() );
 }
 
-GLint Program::uniform_location( const std::string & name )
+GLint Program::uniform_location( const string & name )
 {
   return glGetUniformLocation( num_, name.c_str() );
 }

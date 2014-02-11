@@ -38,11 +38,6 @@ void glfun( int argc, char *argv[] )
   Window window( 800, 800, "OpenGL fun" );
   window.make_context_current( true );
 
-  vector<pair<float, float>> vertices = { { 200, 200 },
-					  { 300, 250 },
-					  { 400, 400 },
-					  { 400, 700 } };
-
   VertexBufferObject vbo;
 
   ArrayBuffer::bind( vbo );
@@ -97,102 +92,55 @@ void glfun( int argc, char *argv[] )
 
   glfwSwapInterval( 1 );
 
-  Texture texture( 1024, 768 );
-  texture.bind();
-
-  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
-  vector< Pixel > myimage( 1024 * 768 );
-
-  random_device rd;
-  uniform_int_distribution<> pixel_value( 0, 255 );
-  for ( auto & x : myimage ) {
-    x.red = pixel_value( rd );
-    x.green = pixel_value( rd );
-    x.blue = pixel_value( rd );
-    x.alpha = pixel_value( rd );
-  }
-
-  texture.load( myimage );
-
   glCheck( "starting loop" );
 
   ios_base::sync_with_stdio( false );
 
-  pair<int, int> last_size = window.size();
+  pair<unsigned int, unsigned int> last_size = window.size();
 
   glViewport( 0, 0, last_size.first, last_size.second );
   glUniform2ui( program.uniform_location( "window_size" ), last_size.first, last_size.second );
 
-  const float width = 20;
+  vector<Pixel> myimage( last_size.first * last_size.second );
+
+  random_device rd;
+  uniform_int_distribution<uint8_t> pixel_value( 0, 5 );
+  for ( unsigned int y = 0; y < last_size.second; y++ ) {
+    for ( unsigned int x = 0; x < last_size.first; x++ ) {
+      myimage.at( y * last_size.first + x ) = { uint8_t( 255 * y / last_size.second + pixel_value( rd ) ),
+						uint8_t( 255 * x / last_size.first + pixel_value( rd ) ),
+						uint8_t( 255 * (x * y) / (last_size.first * last_size.second) + pixel_value( rd ) ),
+						128 };
+    }
+  }
+
+  Texture texture( last_size.first, last_size.second );
+  texture.bind();
+
+  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+  glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
+  texture.load( myimage );
+
+  vector<pair<float, float>> corners = { { 0, 0 },
+					 { 0, last_size.second },
+					 { last_size.first, last_size.second },
+					 { last_size.first, 0 } };
+
+  ArrayBuffer::load( corners, GL_STATIC_DRAW );
 
   while ( not window.should_close() ) {
-    for ( auto & x : vertices ) {
-      x = make_pair( (x.first - last_size.first/2) * cos( .01 ) - (x.second - last_size.second/2) * sin( .01 ) + last_size.first/2,
-		     (x.first - last_size.first/2) * sin( .01 ) + (x.second - last_size.second/2) * cos( .01 ) + last_size.second/2);
+    for ( auto & x : myimage ) {
+      x.red = (x.red + 1) % 255;
+      x.green = (x.green + 2) % 255;
+      x.blue = (x.blue + 3) % 255;
     }
-
-    vector<pair<float, float>> triangles;
-
-    for ( auto it = vertices.begin(); it < vertices.end() - 1; it++ ) {
-      const auto & start = *it;
-      const auto & end = *(it + 1);
-
-      double rise = (end.second - start.second);
-      double run  = (end.first - start.first);
-
-      const double scale_factor = sqrt( rise * rise + run * run );
-
-      rise /= scale_factor;
-      run /= scale_factor;
-
-      rise *= width;
-      run *= width;
-
-      triangles.emplace_back( start.first - rise, start.second + run );
-      triangles.emplace_back( start.first + rise, start.second - run );
-      triangles.emplace_back( end.first + rise, end.second - run );
-
-      triangles.emplace_back( start.first - rise, start.second + run );
-      triangles.emplace_back( end.first - rise, end.second + run );
-      triangles.emplace_back( end.first + rise, end.second - run );
-
-      if ( it < vertices.end() - 2 ) {
-	const auto & next = *(it + 2);
-
-	double new_rise = (next.second - end.second);
-	double new_run = (next.first - end.first);
-
-	const double new_scale_factor = sqrt( new_rise * new_rise + new_run * new_run );
-
-	new_rise /= new_scale_factor;
-	new_run /= new_scale_factor;
-
-	new_rise *= width;
-	new_run *= width;
-
-	int run_sign = run >= 0 ? 1 : -1;
-	int new_run_sign = new_run >= 0 ? 1 : -1;
-
-	if ( run_sign * new_rise < new_run_sign * rise ) {
-	  triangles.emplace_back( end.first - rise, end.second + run );
-	  triangles.emplace_back( end.first, end.second );
-	  triangles.emplace_back( end.first - new_rise, end.second + new_run );
-	} else {
-	  triangles.emplace_back( end.first + rise, end.second - run );
-	  triangles.emplace_back( end.first, end.second );
-	  triangles.emplace_back( end.first + new_rise, end.second - new_run );
-	}
-      }
-    }
-
-    ArrayBuffer::load( triangles, GL_STREAM_DRAW );
+    texture.load( myimage );
 
     glClear( GL_COLOR_BUFFER_BIT );
-    glDrawArrays( GL_TRIANGLES, 0, triangles.size() );
+    glDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
 
     window.swap_buffers();
     glfwPollEvents();
@@ -201,11 +149,18 @@ void glfun( int argc, char *argv[] )
       break;
     }
 
-    const pair<int, int> current_size = window.size();
+    const pair<unsigned int, unsigned int> current_size = window.size();
     if ( current_size != last_size ) {
       glViewport( 0, 0, current_size.first, current_size.second );
       last_size = current_size;
       glUniform2ui( program.uniform_location( "window_size" ), last_size.first, last_size.second );
+
+      corners = { { 0, 0 },
+		  { 0, last_size.second },
+		  { last_size.first, last_size.second },
+		  { last_size.first, 0 } };
+
+      ArrayBuffer::load( corners, GL_STATIC_DRAW );
     }
   }
 
