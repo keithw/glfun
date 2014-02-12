@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <memory>
 
 using namespace std;
 
@@ -128,18 +129,24 @@ Texture::~Texture()
 void Texture::bind( void )
 {
   glBindTexture( GL_TEXTURE_RECTANGLE, num_ );
-  glTexImage2D( GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, width_, height_, 0,
+
+  resize( width_, height_ );
+}
+
+void Texture::resize( const unsigned int width, const unsigned int height )
+{
+  glTexImage2D( GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, width, height, 0,
 		GL_RGBA, GL_UNSIGNED_BYTE, nullptr );
 }
 
-void Texture::load( const vector<Pixel> & pixels )
+void Texture::load( const Image & image )
 {
-  if ( pixels.size() != width_ * height_ ) {
+  if ( image.width != width_ or image.height != height_ ) {
     throw runtime_error( "vector size does not match texture dimensions" );
   }
 
   glTexSubImage2D( GL_TEXTURE_RECTANGLE, 0, 0, 0, width_, height_,
-		   GL_RGBA, GL_UNSIGNED_BYTE, &pixels.front() );
+		   GL_RGBA, GL_UNSIGNED_BYTE, &image.pixels.front() );
 }
 
 void compile_shader( const GLuint num, const string & source )

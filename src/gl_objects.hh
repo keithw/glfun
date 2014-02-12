@@ -8,9 +8,6 @@
 
 #include <string>
 #include <vector>
-#include <memory>
-#include <stdexcept>
-#include <iostream>
 
 class GLFWContext
 {
@@ -52,7 +49,7 @@ public:
     glBindBuffer( id_, obj.num_ );
   }
 
-  static void load( const std::vector<std::pair<float,float>> & vertices, const GLenum usage )
+  static void load( const std::vector<std::pair<float, float>> & vertices, const GLenum usage )
   {
     glBufferData( id, vertices.size() * sizeof( std::pair<float, float> ), &vertices.front(), usage );
   }
@@ -97,6 +94,18 @@ struct Pixel
   uint8_t red, green, blue, alpha;
 };
 
+struct Image
+{
+  unsigned int width, height;
+
+  std::vector<Pixel> pixels;
+
+  Image( const unsigned int width,
+	 const unsigned int height );
+
+  bool verify_size( void ) const;
+};
+
 class Texture
 {
   GLuint num_;
@@ -108,7 +117,8 @@ public:
   ~Texture();
 
   void bind( void );
-  void load( const std::vector<Pixel> & pixels );
+  void load( const Image & image );
+  void resize( const unsigned int width, const unsigned int height );
 
   /* disallow copy */
   Texture( const Texture & other ) = delete;
