@@ -65,9 +65,6 @@ Display::Display( const unsigned int width, const unsigned int height,
   glEnableVertexAttribArray( shader_program_.attribute_location( "position" ) );
   glCheck( "after setting up vertex attribute array" );
 
-  /* set size of viewport and tell shader program */
-  resize();
-
   /* set sync-to-vblank */
   glfwSwapInterval( 1 );
 
@@ -78,26 +75,29 @@ Display::Display( const unsigned int width, const unsigned int height,
   glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
   glTexParameteri( GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
+  /* set size of viewport and tell shader program */
+  const pair<unsigned int, unsigned int> window_size = window().size();
+  resize( window_size );
+
   glCheck( "end of Display constructor" );
 }
 
-void Display::resize( void )
+void Display::resize( const pair<unsigned int, unsigned int> & target_size )
 {
   /* set size of viewport and tell shader program */
-  const auto window_size = window().size();
-  glViewport( 0, 0, window_size.first, window_size.second );
-  glUniform2ui( shader_program_.uniform_location( "window_size" ),
-		window_size.first, window_size.second );
+  glViewport( 0, 0, target_size.first, target_size.second );
+  glUniform2ui( shader_program_.uniform_location( "target_size" ),
+		target_size.first, target_size.second );
 
   /* load new coordinates of corners of image rectangle */
   const vector<pair<float, float>> corners = { { 0, 0 },
-					       { 0, window_size.second },
-					       { window_size.first, window_size.second },
-					       { window_size.first, 0 } };
+					       { 0, target_size.second },
+					       { target_size.first, target_size.second },
+					       { target_size.first, 0 } };
   ArrayBuffer::load( corners, GL_STATIC_DRAW );
 
   /* resize texture */
-  texture_.resize( window_size.first, window_size.second );
+  texture_.resize( target_size.first, target_size.second );
 }
 
 void Display::draw( const Image & image )

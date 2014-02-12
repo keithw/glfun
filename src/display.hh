@@ -29,8 +29,6 @@ class Display
   VertexArrayObject vertex_array_object_ = {};
   VertexBufferObject vertices_ = {};
 
-  void resize( void );
-
 public:
   Display( const unsigned int width, const unsigned int height,
 	   const std::string & title );
@@ -40,6 +38,8 @@ public:
   void repaint( void );
 
   const Window & window( void ) const { return current_context_window_.window_; }
+
+  void resize( const std::pair<unsigned int, unsigned int> & target_size );
 };
 
 #endif /* DISPLAY_HH */

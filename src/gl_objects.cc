@@ -135,18 +135,20 @@ void Texture::bind( void )
 
 void Texture::resize( const unsigned int width, const unsigned int height )
 {
-  glTexImage2D( GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, width, height, 0,
+  width_ = width;
+  height_ = height;
+  glTexImage2D( GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, width_, height_, 0,
 		GL_RGBA, GL_UNSIGNED_BYTE, nullptr );
 }
 
 void Texture::load( const Image & image )
 {
-  if ( image.width != width_ or image.height != height_ ) {
-    throw runtime_error( "vector size does not match texture dimensions" );
+  if ( image.size() != size() ) {
+    throw runtime_error( "image size does not match texture dimensions" );
   }
 
   glTexSubImage2D( GL_TEXTURE_RECTANGLE, 0, 0, 0, width_, height_,
-		   GL_RGBA, GL_UNSIGNED_BYTE, &image.pixels.front() );
+		   GL_RGBA, GL_UNSIGNED_BYTE, &image.pixels().front() );
 }
 
 void compile_shader( const GLuint num, const string & source )
@@ -219,6 +221,20 @@ void glCheck( const string & where, const bool expected )
 
     if ( not expected ) {
       throw runtime_error( "GL error " + where );
+    }
+  }
+}
+
+Image::Image( const unsigned int width,
+	      const unsigned int height )
+  : width_( width ),
+    height_( height ),
+    pixels_()
+{
+  pixels_.reserve( width * height );
+  for ( unsigned int y = 0; y < height; y++ ) {
+    for ( unsigned int x = 0; x < width; x++ ) {
+      pixels_.emplace_back();
     }
   }
 }

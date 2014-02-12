@@ -30,14 +30,36 @@ void glfun( int argc, char *argv[] )
   }
 
   Display display( 640, 480, "OpenGL fun" );
+  Image image( 640, 480 );
+
+  const auto image_size = image.size();
+  for ( unsigned int y = 0; y < image_size.second; y++ ) {
+    for ( unsigned int x = 0; x < image_size.first; x++ ) {
+      image.mutable_pixel( x, y ) = { 128, 255, 128, 255 };
+    }
+  }
 
   while ( not display.window().should_close() ) {
-    display.repaint();
+    const auto image_size = image.size();
+    for ( unsigned int y = 0; y < image_size.second; y++ ) {
+      for ( unsigned int x = 0; x < image_size.first; x++ ) {
+	image.mutable_pixel( x, y ).red++;
+	image.mutable_pixel( x, y ).green--;
+      }
+    }
+
+    display.draw( image );
 
     glfwPollEvents();
 
     if ( display.window().key_pressed( GLFW_KEY_ESCAPE ) ) {
       break;
+    }
+
+    const auto window_size = display.window().size();
+    if ( window_size != image.size() ) {
+      image = Image( window_size.first, window_size.second );
+      display.resize( window_size );
     }
   }
 }

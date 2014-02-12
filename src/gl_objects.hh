@@ -94,16 +94,22 @@ struct Pixel
   uint8_t red, green, blue, alpha;
 };
 
-struct Image
+class Image
 {
-  unsigned int width, height;
+  unsigned int width_, height_;
 
-  std::vector<Pixel> pixels;
+  std::vector<Pixel> pixels_;
 
+public:
   Image( const unsigned int width,
 	 const unsigned int height );
 
-  bool verify_size( void ) const;
+  std::pair<unsigned int, unsigned int> size( void ) const { return std::make_pair( width_, height_ ); }
+  const std::vector<Pixel> & pixels( void ) const { return pixels_; }
+  Pixel & mutable_pixel( const unsigned int col, const unsigned int row )
+  {
+    return pixels_[ row * width_ + col ];
+  }
 };
 
 class Texture
@@ -119,6 +125,7 @@ public:
   void bind( void );
   void load( const Image & image );
   void resize( const unsigned int width, const unsigned int height );
+  std::pair<unsigned int, unsigned int> size( void ) const { return std::make_pair( width_, height_ ); }
 
   /* disallow copy */
   Texture( const Texture & other ) = delete;
