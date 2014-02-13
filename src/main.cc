@@ -35,7 +35,10 @@ void glfun( int argc, char *argv[] )
   const auto image_size = image.size();
   for ( unsigned int y = 0; y < image_size.second; y++ ) {
     for ( unsigned int x = 0; x < image_size.first; x++ ) {
-      image.mutable_pixel( x, y ) = { 128, 255, 128, 255 };
+      image.mutable_pixel( x, y ) = { uint8_t( x % 256 ),
+				      uint8_t( y % 256 ),
+				      uint8_t( (x + y) % 256 ),
+				      255 };
     }
   }
 

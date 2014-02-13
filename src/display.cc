@@ -79,7 +79,7 @@ Display::Display( const unsigned int width, const unsigned int height,
   const pair<unsigned int, unsigned int> window_size = window().size();
   resize( window_size );
 
-  glCheck( "end of Display constructor" );
+  glCheck( "at end of Display constructor" );
 }
 
 void Display::resize( const pair<unsigned int, unsigned int> & target_size )
@@ -98,6 +98,8 @@ void Display::resize( const pair<unsigned int, unsigned int> & target_size )
 
   /* resize texture */
   texture_.resize( target_size.first, target_size.second );
+
+  glCheck( "after resizing" );
 }
 
 void Display::draw( const Image & image )
