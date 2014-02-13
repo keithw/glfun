@@ -192,14 +192,22 @@ void Program::use( void )
   glUseProgram( num_ );
 }
 
-GLint Program::attribute_location( const string & name )
+GLint Program::attribute_location( const string & name ) const
 {
-  return glGetAttribLocation( num_, name.c_str() );
+  const GLint ret = glGetAttribLocation( num_, name.c_str() );
+  if ( ret < 0 ) {
+    throw runtime_error( "attribute not found: " + name );
+  }
+  return ret;
 }
 
-GLint Program::uniform_location( const string & name )
+GLint Program::uniform_location( const string & name ) const
 {
-  return glGetUniformLocation( num_, name.c_str() );
+  const GLint ret = glGetUniformLocation( num_, name.c_str() );
+  if ( ret < 0 ) {
+    throw runtime_error( "uniform not found: " + name );
+  }
+  return ret;
 }
 
 Program::~Program()

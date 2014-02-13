@@ -174,8 +174,8 @@ public:
   void link( void );
   void use( void );
 
-  GLint attribute_location( const std::string & name );
-  GLint uniform_location( const std::string & name );
+  GLint attribute_location( const std::string & name ) const;
+  GLint uniform_location( const std::string & name ) const;
 
   /* forbid copy */
   Program( const Program & other ) = delete;
