@@ -86,7 +86,7 @@ void Display::resize( const pair<unsigned int, unsigned int> & target_size )
 {
   /* set size of viewport and tell shader program */
   glViewport( 0, 0, target_size.first, target_size.second );
-  glUniform2ui( shader_program_.uniform_location( "target_size" ),
+  glUniform2ui( shader_program_.uniform_location( "window_size" ),
 		target_size.first, target_size.second );
 
   /* load new coordinates of corners of image rectangle */
