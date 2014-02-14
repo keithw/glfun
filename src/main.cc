@@ -2,6 +2,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <cairo.h>
+
 #include "display.hh"
 
 using namespace std;
@@ -30,27 +32,37 @@ void glfun( int argc, char *argv[] )
   }
 
   Display display( 640, 480, "OpenGL fun" );
-  Image image( 640, 480 );
 
-  const auto image_size = image.size();
-  for ( unsigned int y = 0; y < image_size.second; y++ ) {
-    for ( unsigned int x = 0; x < image_size.first; x++ ) {
-      image.mutable_pixel( x, y ) = { uint8_t( x % 256 ),
-				      uint8_t( y % 256 ),
-				      uint8_t( (x + y) % 256 ),
-				      255 };
-    }
+  const auto window_size = display.window().size();
+  Image image( window_size.first, window_size.second );
+
+  if ( int( window_size.first ) != cairo_format_stride_for_width( CAIRO_FORMAT_RGB24, window_size.first ) ) {
+    throw runtime_error( "Cairo's preferred stride = " + to_string( cairo_format_stride_for_width( CAIRO_FORMAT_RGB24, window_size.first ) ) );
   }
 
-  while ( not display.window().should_close() ) {
-    const auto image_size = image.size();
-    for ( unsigned int y = 0; y < image_size.second; y++ ) {
-      for ( unsigned int x = 0; x < image_size.first; x++ ) {
-	image.mutable_pixel( x, y ).red++;
-	image.mutable_pixel( x, y ).green--;
-      }
-    }
+  cairo_surface_t *surface =
+    cairo_image_surface_create_for_data( reinterpret_cast<unsigned char *>( &image.mutable_pixels().front() ),
+					 CAIRO_FORMAT_RGB24,
+					 window_size.first,
+					 window_size.second,
+					 window_size.first );
+  const cairo_status_t result = cairo_surface_status( surface );
+  if ( result ) {
+    throw runtime_error( string( "cairo error: " ) + cairo_status_to_string( result ) );
+  }
 
+  cairo_t *cr =
+    cairo_create (surface);
+
+  cairo_select_font_face (cr, "serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+  cairo_set_font_size (cr, 32.0);
+  cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
+  cairo_move_to (cr, 10.0, 50.0);
+  cairo_show_text (cr, "Hello, world");
+  cairo_destroy (cr);
+
+
+  while ( not display.window().should_close() ) {
     display.draw( image );
 
     glfwPollEvents();
@@ -61,8 +73,9 @@ void glfun( int argc, char *argv[] )
 
     const auto window_size = display.window().size();
     if ( window_size != image.size() ) {
-      image = Image( window_size.first, window_size.second );
-      display.resize( window_size );
+      return;
     }
   }
+
+  cairo_surface_destroy (surface);
 }

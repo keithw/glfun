@@ -89,10 +89,7 @@ public:
   VertexArrayObject & operator=( const VertexArrayObject & other ) = delete;
 };
 
-struct Pixel
-{
-  uint8_t red, green, blue, alpha;
-};
+typedef uint32_t Pixel;
 
 class Image
 {
@@ -106,6 +103,7 @@ public:
 
   std::pair<unsigned int, unsigned int> size( void ) const { return std::make_pair( width_, height_ ); }
   const std::vector<Pixel> & pixels( void ) const { return pixels_; }
+  std::vector<Pixel> & mutable_pixels( void ) { return pixels_; }
   Pixel & mutable_pixel( const unsigned int col, const unsigned int row )
   {
     return pixels_[ row * width_ + col ];
