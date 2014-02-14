@@ -18,7 +18,7 @@ const std::string Display::shader_source_scale_from_pixel_coordinates
       {
 	gl_Position = vec4( 2 * position.x / window_size.x - 1.0,
                             2 * position.y / window_size.y - 1.0, 0.0, 1.0 );
-        raw_position = position;
+        raw_position = vec2( position.x, window_size.y - position.y );
       }
     )";
 

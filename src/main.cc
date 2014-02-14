@@ -1,6 +1,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <cassert>
+#include <random>
+#include <thread>
+#include <chrono>
 
 #include <cairo.h>
 
@@ -31,21 +35,27 @@ void glfun( int argc, char *argv[] )
     throw runtime_error( "bad command-line arguments" );
   }
 
-  Display display( 640, 480, "OpenGL fun" );
+  Display display( 1024, 768, "OpenGL fun" );
 
   const auto window_size = display.window().size();
-  Image image( window_size.first, window_size.second );
-
-  if ( int( window_size.first ) != cairo_format_stride_for_width( CAIRO_FORMAT_RGB24, window_size.first ) ) {
-    throw runtime_error( "Cairo's preferred stride = " + to_string( cairo_format_stride_for_width( CAIRO_FORMAT_RGB24, window_size.first ) ) );
+  int stride = cairo_format_stride_for_width( CAIRO_FORMAT_RGB24, window_size.first );
+  if ( stride % sizeof( Pixel ) ) {
+    throw runtime_error( "Cairo requested stride that was not even multiple of pixel size" );
   }
 
+  if ( stride < int( sizeof( Pixel ) * window_size.first ) ) {
+    throw runtime_error( "Cairo does not support width " + to_string( window_size.first ) );    
+  }
+
+  Image image( window_size.first, window_size.second, stride / sizeof( Pixel ) );
+  assert( stride == int( image.stride_bytes() ) );
+
   cairo_surface_t *surface =
-    cairo_image_surface_create_for_data( reinterpret_cast<unsigned char *>( &image.mutable_pixels().front() ),
-					 CAIRO_FORMAT_RGB24,
+    cairo_image_surface_create_for_data( image.raw_pixels(),
+					 CAIRO_FORMAT_ARGB32,
 					 window_size.first,
 					 window_size.second,
-					 window_size.first );
+					 image.stride_bytes() );
   const cairo_status_t result = cairo_surface_status( surface );
   if ( result ) {
     throw runtime_error( string( "cairo error: " ) + cairo_status_to_string( result ) );
@@ -54,15 +64,34 @@ void glfun( int argc, char *argv[] )
   cairo_t *cr =
     cairo_create (surface);
 
-  cairo_select_font_face (cr, "serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_font_size (cr, 32.0);
-  cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
-  cairo_move_to (cr, 10.0, 50.0);
-  cairo_show_text (cr, "Hello, world");
-  cairo_destroy (cr);
+  random_device rd;
+  uniform_real_distribution<float> cols( 0, window_size.first );
+  uniform_real_distribution<float> rows( 0, window_size.second );
 
+  cairo_set_antialias( cr, CAIRO_ANTIALIAS_NONE );
 
   while ( not display.window().should_close() ) {
+    image.clear();
+
+    cairo_set_line_width (cr, 1);
+    cairo_set_source_rgba (cr, 1, 0, 0, 1);
+
+    float col = cols( rd ), row = rows( rd );
+
+    for ( unsigned int i = 0; i < 1000; i++ ) {
+      cairo_move_to( cr, col, row );
+
+      float new_col = int( cols( rd ) );
+      cairo_line_to (cr, new_col, row );
+      col = new_col;
+
+      float new_row = int( rows( rd ) );
+      cairo_line_to (cr, col, new_row );
+      row = new_row;
+    }
+
+    cairo_stroke (cr);
+
     display.draw( image );
 
     glfwPollEvents();
@@ -75,7 +104,10 @@ void glfun( int argc, char *argv[] )
     if ( window_size != image.size() ) {
       return;
     }
+
+    // this_thread::sleep_for( chrono::seconds( 1 ) );
   }
 
+  cairo_destroy (cr);
   cairo_surface_destroy (surface);
 }
