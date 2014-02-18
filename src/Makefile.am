@@ -3,4 +3,8 @@ AM_CXXFLAGS = $(PICKY_CXXFLAGS) $(NODEBUG_CXXFLAGS)
 LDADD = $(GL_LIBS) $(GLFW_LIBS) $(GLEW_LIBS) $(GLU_LIBS) $(PANGOCAIRO_LIBS)
 bin_PROGRAMS = glfun
 
-glfun_SOURCES = main.cc gl_objects.hh gl_objects.cc display.hh display.cc
+glfun_SOURCES = main.cc \
+	gl_objects.hh gl_objects.cc \
+	display.hh display.cc \
+	image.hh image.cc \
+	cairo_objects.hh cairo_objects.cc

@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+class Image;
+
 class GLFWContext
 {
   static void error_callback( const int, const char * const description );
@@ -87,32 +89,6 @@ public:
   /* forbid copy */
   VertexArrayObject( const VertexArrayObject & other ) = delete;
   VertexArrayObject & operator=( const VertexArrayObject & other ) = delete;
-};
-
-typedef uint32_t Pixel;
-
-class Image
-{
-  unsigned int width_, height_, stride_;
-
-  std::vector<Pixel> pixels_;
-
-public:
-  Image( const unsigned int width,
-	 const unsigned int height,
-	 const unsigned int stride );
-
-  std::pair<unsigned int, unsigned int> size( void ) const { return std::make_pair( width_, height_ ); }
-  const std::vector<Pixel> & pixels( void ) const { return pixels_; }
-  unsigned char * raw_pixels( void ) { return reinterpret_cast<unsigned char *>( &pixels_.front() ); }
-  Pixel & mutable_pixel( const unsigned int col, const unsigned int row )
-  {
-    return pixels_[ row * stride_ + col ];
-  }
-
-  unsigned int stride( void ) const { return stride_; }
-  unsigned int stride_bytes( void ) const { return stride_ * sizeof( Pixel ); }
-  void clear( void );
 };
 
 class Texture

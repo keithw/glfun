@@ -1,10 +1,9 @@
-#include "gl_objects.hh"
-
-#include <cstring>
-
 #include <iostream>
 #include <stdexcept>
 #include <memory>
+
+#include "gl_objects.hh"
+#include "image.hh"
 
 using namespace std;
 
@@ -33,9 +32,9 @@ Window::Window( const unsigned int width, const unsigned int height, const strin
   glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
   glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
   glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
-  //  glfwWindowHint( GLFW_SAMPLES, 4 );
+  glfwWindowHint( GLFW_SAMPLES, 4 );
   glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
-  glfwWindowHint( GLFW_ALPHA_BITS, 0 );
+  //  glfwWindowHint( GLFW_ALPHA_BITS, 0 );
 
   window_ = glfwCreateWindow( width, height, title.c_str(), nullptr, nullptr );
   if ( not window_ ) {
@@ -150,7 +149,7 @@ void Texture::load( const Image & image )
     throw runtime_error( "image size does not match texture dimensions" );
   }
 
-  glPixelStorei( GL_UNPACK_ROW_LENGTH, image.stride() );
+  glPixelStorei( GL_UNPACK_ROW_LENGTH, image.stride_pixels() );
   glTexSubImage2D( GL_TEXTURE_RECTANGLE, 0, 0, 0, width_, height_,
 		   GL_BGRA, GL_UNSIGNED_BYTE, &image.pixels().front() );
 }
@@ -235,28 +234,4 @@ void glCheck( const string & where, const bool expected )
       throw runtime_error( "GL error " + where );
     }
   }
-}
-
-Image::Image( const unsigned int width,
-	      const unsigned int height,
-	      const unsigned int stride )
-  : width_( width ),
-    height_( height ),
-    stride_( stride ),
-    pixels_()
-{
-  if ( stride < width ) {
-    throw runtime_error( "invalid stride in Image constructor" );
-  }
-  pixels_.reserve( stride * height );
-  for ( unsigned int y = 0; y < height; y++ ) {
-    for ( unsigned int x = 0; x < stride; x++ ) {
-      pixels_.emplace_back();
-    }
-  }
-}
-
-void Image::clear( void )
-{
-  memset( raw_pixels(), 0, pixels_.size() * sizeof( Pixel ) );
 }

@@ -1,14 +1,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-#include <cassert>
 #include <random>
-#include <thread>
-#include <chrono>
-
-#include <cairo.h>
 
 #include "display.hh"
+#include "cairo_objects.hh"
 
 using namespace std;
 
@@ -36,63 +32,35 @@ void glfun( int argc, char *argv[] )
   }
 
   Display display( 1024, 768, "OpenGL fun" );
-
-  const auto window_size = display.window().size();
-  int stride = cairo_format_stride_for_width( CAIRO_FORMAT_RGB24, window_size.first );
-  if ( stride % sizeof( Pixel ) ) {
-    throw runtime_error( "Cairo requested stride that was not even multiple of pixel size" );
-  }
-
-  if ( stride < int( sizeof( Pixel ) * window_size.first ) ) {
-    throw runtime_error( "Cairo does not support width " + to_string( window_size.first ) );    
-  }
-
-  Image image( window_size.first, window_size.second, stride / sizeof( Pixel ) );
-  assert( stride == int( image.stride_bytes() ) );
-
-  cairo_surface_t *surface =
-    cairo_image_surface_create_for_data( image.raw_pixels(),
-					 CAIRO_FORMAT_ARGB32,
-					 window_size.first,
-					 window_size.second,
-					 image.stride_bytes() );
-  const cairo_status_t result = cairo_surface_status( surface );
-  if ( result ) {
-    throw runtime_error( string( "cairo error: " ) + cairo_status_to_string( result ) );
-  }
-
-  cairo_t *cr =
-    cairo_create (surface);
+  CairoContext cairo( display.window().size() );
 
   random_device rd;
-  uniform_real_distribution<float> cols( 0, window_size.first );
-  uniform_real_distribution<float> rows( 0, window_size.second );
-
-  cairo_set_antialias( cr, CAIRO_ANTIALIAS_NONE );
+  uniform_real_distribution<float> cols( 0, display.window().size().first );
+  uniform_real_distribution<float> rows( 0, display.window().size().second );
 
   while ( not display.window().should_close() ) {
-    image.clear();
+    cairo.mutable_image().clear();
 
-    cairo_set_line_width (cr, 1);
-    cairo_set_source_rgba (cr, 1, 0, 0, 1);
+    cairo_set_line_width( cairo, 1 );
+    cairo_set_source_rgba( cairo, 1, 0, 0, 1 );
 
     float col = cols( rd ), row = rows( rd );
 
     for ( unsigned int i = 0; i < 1000; i++ ) {
-      cairo_move_to( cr, col, row );
+      cairo_move_to( cairo, col, row );
 
       float new_col = int( cols( rd ) );
-      cairo_line_to (cr, new_col, row );
+      cairo_line_to( cairo, new_col, row );
       col = new_col;
 
       float new_row = int( rows( rd ) );
-      cairo_line_to (cr, col, new_row );
+      cairo_line_to( cairo, col, new_row );
       row = new_row;
+
+      cairo_stroke( cairo );
     }
 
-    cairo_stroke (cr);
-
-    display.draw( image );
+    display.draw( cairo.image() );
 
     glfwPollEvents();
 
@@ -101,13 +69,8 @@ void glfun( int argc, char *argv[] )
     }
 
     const auto window_size = display.window().size();
-    if ( window_size != image.size() ) {
+    if ( window_size != cairo.image().size() ) {
       return;
     }
-
-    // this_thread::sleep_for( chrono::seconds( 1 ) );
   }
-
-  cairo_destroy (cr);
-  cairo_surface_destroy (surface);
 }
