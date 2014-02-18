@@ -18,7 +18,7 @@ const std::string Display::shader_source_scale_from_pixel_coordinates
       {
 	gl_Position = vec4( 2 * position.x / window_size.x - 1.0,
                             1.0 - 2 * position.y / window_size.y, 0.0, 1.0 );
-        raw_position = vec2( position.x, window_size.y - position.y );
+        raw_position = vec2( position.x, position.y );
       }
     )";
 
@@ -181,13 +181,15 @@ void Display::draw( const float red, const float green, const float blue, const 
     triangles.emplace_back( end.first - halfwidth, start.second + halfwidth );
 
     /* vertical portion */
-    triangles.emplace_back( end.first - halfwidth, start.second - halfwidth );
-    triangles.emplace_back( end.first - halfwidth, end.second - halfwidth );
-    triangles.emplace_back( end.first + halfwidth, end.second - halfwidth );
+    const float adjwidth = end.second > start.second ? halfwidth : -halfwidth;
 
-    triangles.emplace_back( end.first - halfwidth, start.second - halfwidth );
-    triangles.emplace_back( end.first + halfwidth, start.second - halfwidth );
-    triangles.emplace_back( end.first + halfwidth, end.second - halfwidth );
+    triangles.emplace_back( end.first - adjwidth, start.second - adjwidth );
+    triangles.emplace_back( end.first - adjwidth, end.second - adjwidth );
+    triangles.emplace_back( end.first + adjwidth, end.second - adjwidth );
+
+    triangles.emplace_back( end.first - adjwidth, start.second - adjwidth );
+    triangles.emplace_back( end.first + adjwidth, start.second - adjwidth );
+    triangles.emplace_back( end.first + adjwidth, end.second - adjwidth );
   }
 
   if ( not vertices.empty() ) {

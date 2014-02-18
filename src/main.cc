@@ -5,6 +5,8 @@
 #include <thread>
 #include <chrono>
 
+#include <pango/pangocairo.h>
+
 #include "display.hh"
 #include "cairo_objects.hh"
 
@@ -36,44 +38,72 @@ void glfun( int argc, char *argv[] )
   Display display( 1024, 768, "OpenGL fun" );
   CairoContext cairo( display.window().size() );
 
-  random_device rd;
-  uniform_int_distribution<> cols( 0, display.window().size().first );
-  uniform_int_distribution<> rows( 0, display.window().size().second );
+  float scale = 1.0;
 
   while ( not display.window().should_close() ) {
     cairo.mutable_image().clear();
 
-    cairo_set_line_width( cairo, 2 );
-    cairo_set_source_rgba( cairo, 1, 0, 0, 0.75 );
-
-    float col = cols( rd ), row = rows( rd );
-
-    cairo_move_to( cairo, col, row );
-
-    for ( unsigned int i = 0; i < 1000; i++ ) {
-      float new_col = cols( rd );
-      cairo_line_to( cairo, new_col, row );
-      col = new_col;
-
-      float new_row = rows( rd );
-      cairo_line_to( cairo, col, new_row );
-      row = new_row;
-    }
-
+    cairo_set_line_width( cairo, 20 );
+    cairo_move_to( cairo, 50, 200 );
+    cairo_line_to( cairo, 800, 200 + scale * 10 );
     cairo_stroke( cairo );
+
+    PangoLayout *layout = pango_cairo_create_layout( cairo );
+
+    pango_layout_set_text( layout, "Hello, world.", -1 );
+
+    PangoFontDescription *desc = pango_font_description_from_string("Sans Bold 40");
+
+    pango_layout_set_font_description( layout, desc );
+
+    pango_font_description_free( desc );
+
+    cairo_new_path( cairo );
+    cairo_identity_matrix( cairo );
+    cairo_scale( cairo, scale, scale );
+    scale *= 1.001;
+
+    pango_cairo_layout_path( cairo, layout );
+    cairo_path_t * text = cairo_copy_path( cairo );
+    
+    double x1, y1, x2, y2;
+    cairo_path_extents( cairo, &x1, &y1, &x2, &y2 );
+
+    cairo_user_to_device( cairo, &x1, &y1 );
+    cairo_user_to_device( cairo, &x2, &y2 );
+
+    cairo_new_path( cairo );
+
+    double center_x = 512 - x1 - (x2 - x1) / 2.0;
+    double center_y = 384 - y1 - (y2 - y1) / 2.0;
+
+    cairo_device_to_user( cairo, &center_x, &center_y );
+
+    cairo_translate( cairo, center_x, center_y );
+    cairo_append_path( cairo, text );
+    cairo_path_destroy( text );
+
+    cairo_set_line_width( cairo, 4 );
+
+    cairo_set_source_rgba( cairo, 0, 1, 1, 1 );
+
+    cairo_stroke_preserve( cairo );
+    cairo_set_source_rgba( cairo, 1, 0, 0, 1 );
+    cairo_fill( cairo );
+    cairo_identity_matrix( cairo );
+
+    g_object_unref( layout );
 
     display.clear();
 
     display.draw( cairo.image() );
 
     vector<pair<uint16_t, uint16_t>> points;
-    points.reserve( 10000 );
 
-    for ( unsigned int i = 0; i < 1000; i++ ) {
-      points.emplace_back( cols( rd ), rows( rd ) );
-    }
+    points.emplace_back( 50, 200 );
+    points.emplace_back( 900, 200 - scale * 10 );
 
-    display.draw( 0, 0, 1, 0.25, 1,
+    display.draw( 0, 0, 1, 0.25, 20,
 		  points );
 
     display.swap();
@@ -88,7 +118,5 @@ void glfun( int argc, char *argv[] )
     if ( window_size != cairo.image().size() ) {
       return;
     }
-
-    //    this_thread::sleep_for( chrono::milliseconds( 250 ) );
   }
 }
