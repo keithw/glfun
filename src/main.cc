@@ -2,6 +2,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <random>
+#include <thread>
+#include <chrono>
 
 #include "display.hh"
 #include "cairo_objects.hh"
@@ -35,32 +37,46 @@ void glfun( int argc, char *argv[] )
   CairoContext cairo( display.window().size() );
 
   random_device rd;
-  uniform_real_distribution<float> cols( 0, display.window().size().first );
-  uniform_real_distribution<float> rows( 0, display.window().size().second );
+  uniform_int_distribution<> cols( 0, display.window().size().first );
+  uniform_int_distribution<> rows( 0, display.window().size().second );
 
   while ( not display.window().should_close() ) {
     cairo.mutable_image().clear();
 
-    cairo_set_line_width( cairo, 1 );
-    cairo_set_source_rgba( cairo, 1, 0, 0, 1 );
+    cairo_set_line_width( cairo, 2 );
+    cairo_set_source_rgba( cairo, 1, 0, 0, 0.75 );
 
     float col = cols( rd ), row = rows( rd );
 
-    for ( unsigned int i = 0; i < 1000; i++ ) {
-      cairo_move_to( cairo, col, row );
+    cairo_move_to( cairo, col, row );
 
-      float new_col = int( cols( rd ) );
+    for ( unsigned int i = 0; i < 1000; i++ ) {
+      float new_col = cols( rd );
       cairo_line_to( cairo, new_col, row );
       col = new_col;
 
-      float new_row = int( rows( rd ) );
+      float new_row = rows( rd );
       cairo_line_to( cairo, col, new_row );
       row = new_row;
-
-      cairo_stroke( cairo );
     }
 
+    cairo_stroke( cairo );
+
+    display.clear();
+
     display.draw( cairo.image() );
+
+    vector<pair<uint16_t, uint16_t>> points;
+    points.reserve( 10000 );
+
+    for ( unsigned int i = 0; i < 1000; i++ ) {
+      points.emplace_back( cols( rd ), rows( rd ) );
+    }
+
+    display.draw( 0, 0, 1, 0.25, 1,
+		  points );
+
+    display.swap();
 
     glfwPollEvents();
 
@@ -72,5 +88,7 @@ void glfun( int argc, char *argv[] )
     if ( window_size != cairo.image().size() ) {
       return;
     }
+
+    //    this_thread::sleep_for( chrono::milliseconds( 250 ) );
   }
 }
