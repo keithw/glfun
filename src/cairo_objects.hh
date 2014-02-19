@@ -83,15 +83,13 @@ struct PangoDelete { void operator() ( T * x ) { g_object_unref( x ); } };
 class Pango
 {
   std::unique_ptr<PangoContext, PangoDelete<PangoContext>> context_;
+  std::unique_ptr<PangoLayout, PangoDelete<PangoLayout>> layout_;
 
-  struct Layout
-  {
-    std::unique_ptr<PangoLayout, PangoDelete<PangoLayout>> layout;
+public:
+  Pango( Cairo & cairo );
 
-    Layout( Pango & pango );
-
-    operator PangoLayout * () { return layout.get(); }
-  };
+  operator PangoContext * () { return context_.get(); }
+  operator PangoLayout * () { return layout_.get(); }
 
   struct Font
   {
@@ -101,13 +99,8 @@ class Pango
 
     Font( const std::string & description );
 
-    operator PangoFontDescription * () { return font.get(); }
+    operator const PangoFontDescription * () const { return font.get(); }
   };
-
-public:
-  Pango( Cairo & cairo );
-
-  operator PangoContext * () { return context_.get(); }
 
   class Text
   {
@@ -117,12 +110,14 @@ public:
     Cairo::Extent<false> extent_;
 
   public:
-    Text( Cairo & cairo, Pango & pango, const std::string & text, const std::string & font );
+    Text( Cairo & cairo, Pango & pango, const std::string & text );
 
     const Cairo::Extent<false> & extent( void ) { return extent_; }
 
     operator cairo_path_t * () { return path_.get(); }
   };
+
+  void set_font( const Font & font );
 };
 
 #endif /* CAIRO_OBJECTS_HH */

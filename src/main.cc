@@ -40,6 +40,8 @@ void glfun( int argc, char *argv[] )
   Cairo cairo( display.window().size() );
 
   Pango pango( cairo );
+  Pango::Font caslon( "ACaslon Regular, Normal 20" );
+  pango.set_font( caslon );
 
   float scale = 1.0;
 
@@ -67,13 +69,12 @@ void glfun( int argc, char *argv[] )
     ss.imbue( locale( "" ) );
     ss << fixed << age.count() << " ms";
 
-    Pango::Text hello( cairo, pango, ss.str(),
-		       "cmss10 14" );
+    Pango::Text hello( cairo, pango, ss.str() );
 
     cairo_identity_matrix( cairo );
     cairo_new_path( cairo );
     cairo_scale( cairo, scale, scale );
-    cairo_rotate( cairo, scale - 1 );
+    cairo_rotate( cairo, sin( 100 * scale - 1 ) / 10 );
 
     /* center the text in the window */
     const auto window_size = display.window().size();

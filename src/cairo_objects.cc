@@ -66,34 +66,32 @@ void Cairo::check_error( void )
 }
 
 Pango::Pango( Cairo & cairo )
-  : context_( pango_cairo_create_context( cairo ) )
-{}
-
-Pango::Layout::Layout( Pango & pango )
-  : layout( pango_layout_new( pango ) )
+  : context_( pango_cairo_create_context( cairo ) ),
+    layout_( pango_layout_new( *this ) )
 {}
 
 Pango::Font::Font( const string & description )
   : font( pango_font_description_from_string( description.c_str() ) )
 {}
 
-Pango::Text::Text( Cairo & cairo, Pango & pango, const string & text, const string & font )
+void Pango::set_font( const Pango::Font & font )
+{
+  pango_layout_set_font_description( *this, font );
+}
+
+Pango::Text::Text( Cairo & cairo, Pango & pango, const string & text )
   : path_(),
     extent_( { 0, 0, 0, 0 } )
 {
-  Layout layout( pango );  
-  Font font_description( font );
-  pango_layout_set_font_description( layout, font_description );
+  pango_layout_set_text( pango, text.data(), text.size() );
 
-  pango_layout_set_text( layout, text.data(), text.size() );
-
-  pango_cairo_layout_path( cairo, layout );
+  pango_cairo_layout_path( cairo, pango );
 
   path_ = unique_ptr<cairo_path_t, Deleter>( cairo_copy_path( cairo ) );
 
   /* get logical extents */
   PangoRectangle logical;
-  pango_layout_get_extents( layout, nullptr, &logical );
+  pango_layout_get_extents( pango, nullptr, &logical );
   extent_ = { logical.x / double( PANGO_SCALE ),
 	      logical.y / double( PANGO_SCALE ),
 	      logical.width / double( PANGO_SCALE ),
