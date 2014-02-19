@@ -83,6 +83,9 @@ Pango::Text::Text( Cairo & cairo, Pango & pango, const string & text )
   : path_(),
     extent_( { 0, 0, 0, 0 } )
 {
+  cairo_identity_matrix( cairo );
+  cairo_new_path( cairo );
+
   pango_layout_set_text( pango, text.data(), text.size() );
 
   pango_cairo_layout_path( cairo, pango );
@@ -96,4 +99,18 @@ Pango::Text::Text( Cairo & cairo, Pango & pango, const string & text )
 	      logical.y / double( PANGO_SCALE ),
 	      logical.width / double( PANGO_SCALE ),
 	      logical.height / double( PANGO_SCALE ) };
+}
+
+void Pango::Text::draw_centered_at( Cairo & cairo, const double x, const double y ) const
+{
+  cairo_identity_matrix( cairo );
+  cairo_new_path( cairo );
+  Cairo::Extent<true> my_extent = extent().to_device( cairo );
+
+  double center_x = x - my_extent.x - my_extent.width / 2;
+  double center_y = y - my_extent.y - my_extent.height / 2;
+
+  cairo_device_to_user( cairo, &center_x, &center_y );
+  cairo_translate( cairo, center_x, center_y );
+  cairo_append_path( cairo, path_.get() );
 }

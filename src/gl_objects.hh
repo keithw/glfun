@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class Image;
 
@@ -18,11 +19,17 @@ class GLFWContext
 public:
   GLFWContext();
   ~GLFWContext();
+
+  /* forbid copy */
+  GLFWContext( const GLFWContext & other ) = delete;
+  GLFWContext & operator=( const GLFWContext & other ) = delete;
 };
 
 class Window
 {
-  GLFWwindow * window_;
+  struct Deleter { void operator() ( GLFWwindow * x ) const; };
+
+  std::unique_ptr<GLFWwindow, Deleter> window_;
 
 public:
   Window( const unsigned int width, const unsigned int height, const std::string & title );
@@ -31,12 +38,6 @@ public:
   void swap_buffers( void );
   bool key_pressed( const int key ) const;
   std::pair<unsigned int, unsigned int> size( void ) const;
-
-  ~Window();
-
-  /* forbid copy */
-  Window( const Window & other ) = delete;
-  Window & operator=( const Window & other ) = delete;
 };
 
 template <GLenum id_>

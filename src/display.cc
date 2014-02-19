@@ -162,7 +162,8 @@ void Display::swap( void )
 
 void Display::draw( const float red, const float green, const float blue, const float alpha,
 		    const float width,
-		    const vector<pair<float, float>> & vertices )
+		    const deque<pair<float, float>> & vertices,
+		    const std::function<std::pair<float, float>(const std::pair<float, float> &)> & transform )
 {
   ArrayBuffer::bind( other_vertices_ );
   solid_color_array_object_.bind();
@@ -173,8 +174,8 @@ void Display::draw( const float red, const float green, const float blue, const 
   vector<pair<float, float>> triangles;
 
   for ( auto it = vertices.begin(); it < vertices.end() - 1; it++ ) {
-    const auto & start = *it;
-    const auto & end = *(it + 1);
+    const auto start = transform( *it );
+    const auto end = transform( *(it + 1) );
 
     /* horizontal portion */
     triangles.emplace_back( start.first - halfwidth, start.second - halfwidth );
@@ -198,18 +199,18 @@ void Display::draw( const float red, const float green, const float blue, const 
   }
 
   if ( not vertices.empty() ) {
-    /* fill in last square */
-    triangles.emplace_back( vertices.back().first - halfwidth, vertices.back().second - halfwidth );
-    triangles.emplace_back( vertices.back().first - halfwidth, vertices.back().second + halfwidth );
-    triangles.emplace_back( vertices.back().first + halfwidth, vertices.back().second + halfwidth );
+    const auto last = transform( vertices.back() );
 
-    triangles.emplace_back( vertices.back().first - halfwidth, vertices.back().second - halfwidth );
-    triangles.emplace_back( vertices.back().first + halfwidth, vertices.back().second - halfwidth );   
-    triangles.emplace_back( vertices.back().first + halfwidth, vertices.back().second + halfwidth );
+    /* fill in last square */
+    triangles.emplace_back( last.first - halfwidth, last.second - halfwidth );
+    triangles.emplace_back( last.first - halfwidth, last.second + halfwidth );
+    triangles.emplace_back( last.first + halfwidth, last.second + halfwidth );
+
+    triangles.emplace_back( last.first - halfwidth, last.second - halfwidth );
+    triangles.emplace_back( last.first + halfwidth, last.second - halfwidth );   
+    triangles.emplace_back( last.first + halfwidth, last.second + halfwidth );
   }
 
-  solid_color_array_object_.bind();
-  ArrayBuffer::bind( other_vertices_ );
   ArrayBuffer::load( triangles, GL_STREAM_DRAW );
 
   solid_color_shader_program_.use();

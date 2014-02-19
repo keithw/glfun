@@ -1,7 +1,7 @@
 #ifndef DISPLAY_HH
 #define DISPLAY_HH
 
-#include <vector>
+#include <deque>
 #include <string>
 
 #include "gl_objects.hh"
@@ -43,7 +43,8 @@ public:
   void draw( const Image & image );
   void draw( const float red, const float green, const float blue, const float alpha,
 	     const float width,
-	     const std::vector<std::pair<float, float>> & vertices );
+	     const std::deque<std::pair<float, float>> & vertices,
+	     const std::function<std::pair<float, float>(const std::pair<float, float> &)> & transform );
   void clear( void );
 
   void repaint( void );

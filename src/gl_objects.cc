@@ -32,19 +32,19 @@ Window::Window( const unsigned int width, const unsigned int height, const strin
   glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
   glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
   glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
-  //  glfwWindowHint( GLFW_SAMPLES, 4 );
+  glfwWindowHint( GLFW_SAMPLES, 4 );
   glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
   //  glfwWindowHint( GLFW_ALPHA_BITS, 0 );
 
-  window_ = glfwCreateWindow( width, height, title.c_str(), nullptr, nullptr );
-  if ( not window_ ) {
+  window_.reset( glfwCreateWindow( width, height, title.c_str(), nullptr, nullptr ) );
+  if ( not window_.get() ) {
     throw runtime_error( "could not create window" );
   }
 }
 
 void Window::make_context_current( const bool initialize_extensions )
 {
-  glfwMakeContextCurrent( window_ );
+  glfwMakeContextCurrent( window_.get() );
 
   glCheck( "after MakeContextCurrent" );
 
@@ -57,23 +57,23 @@ void Window::make_context_current( const bool initialize_extensions )
 
 bool Window::should_close( void ) const
 {
-  return glfwWindowShouldClose( window_ );
+  return glfwWindowShouldClose( window_.get() );
 }
 
 void Window::swap_buffers( void )
 {
-  return glfwSwapBuffers( window_ );
+  return glfwSwapBuffers( window_.get() );
 }
 
 bool Window::key_pressed( const int key ) const
 {
-  return GLFW_PRESS == glfwGetKey( window_, key );
+  return GLFW_PRESS == glfwGetKey( window_.get(), key );
 }
 
 pair<unsigned int, unsigned int> Window::size( void ) const
 {
   int width, height;
-  glfwGetFramebufferSize( window_, &width, &height );
+  glfwGetFramebufferSize( window_.get(), &width, &height );
 
   if ( width < 0 or height < 0 ) {
     throw runtime_error( "negative framebuffer width or height" );
@@ -82,10 +82,10 @@ pair<unsigned int, unsigned int> Window::size( void ) const
   return pair<unsigned int, unsigned int>( width, height );
 }
 
-Window::~Window()
+void Window::Deleter::operator() ( GLFWwindow * x ) const
 {
-  glfwHideWindow( window_ );
-  glfwDestroyWindow( window_ );
+  glfwHideWindow( x );
+  glfwDestroyWindow( x );
 }
 
 VertexBufferObject::VertexBufferObject()
