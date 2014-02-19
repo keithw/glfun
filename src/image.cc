@@ -26,5 +26,5 @@ Image::Image( const unsigned int width,
 
 void Image::clear( void )
 {
-  memset( raw_pixels(), 0, pixels_.size() * sizeof( Pixel ) );
+  memset( raw_pixels(), 255, pixels_.size() * sizeof( Pixel ) );
 }
