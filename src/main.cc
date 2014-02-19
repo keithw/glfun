@@ -38,8 +38,6 @@ void glfun( int argc, char *argv[] )
 
   Pango pango( cairo );
 
-  Pango::Text hello( cairo, pango, "Hello, world.", "Sans Bold 40" );
-
   float scale = 1.0;
 
   while ( not display.window().should_close() ) {
@@ -47,28 +45,43 @@ void glfun( int argc, char *argv[] )
 
     cairo.mutable_image().clear();
 
+    /*
     cairo_identity_matrix( cairo );
 
     cairo_set_line_width( cairo, 20 );
     cairo_move_to( cairo, 50, 200 );
     cairo_line_to( cairo, 800, 200 + scale * 10 );
     cairo_stroke( cairo );
+    */
 
     cairo_identity_matrix( cairo );
 
     cairo_new_path( cairo );
 
+    Pango::Text hello( cairo, pango, "Unaware of grid.", "Sans Bold 40" );
+
     cairo_scale( cairo, scale, scale );
+
+    cairo_new_path( cairo );
 
     Cairo::Extent<true> extent = hello.extent().to_device( cairo );
 
     const auto window_size = display.window().size();
     double center_x = window_size.first / 2 - extent.x - extent.width / 2;
-    double center_y = window_size.second / 2 - extent.y - extent.height / 2;
+    double center_y = window_size.second / 2 - extent.y - extent.height / 2 - window_size.second / 4;
 
     cairo_device_to_user( cairo, &center_x, &center_y );
 
     cairo_translate( cairo, center_x, center_y );
+
+    Pango::Text hello2( cairo, pango, "Aware of grid.", "Sans Bold 40" );
+
+    double motion_x = 0;
+    double motion_y = window_size.second / 2;
+
+    cairo_device_to_user( cairo, &motion_x, &motion_y );
+
+    cairo_translate( cairo, center_x + motion_x, center_y + motion_y );
 
     cairo_append_path( cairo, hello );
 
@@ -82,6 +95,7 @@ void glfun( int argc, char *argv[] )
     display.clear();
     display.draw( cairo.image() );
 
+    /*
     vector<pair<float, float>> points;
 
     points.emplace_back( 50, 200 );
@@ -89,6 +103,7 @@ void glfun( int argc, char *argv[] )
 
     display.draw( 0, 0, 1, 0.25, 20,
 		  points );
+    */
 
     display.swap();
 
