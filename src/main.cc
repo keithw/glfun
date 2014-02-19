@@ -43,7 +43,7 @@ void glfun( int argc, char *argv[] )
 
   Pango pango( cairo );
   Pango::Font caslon( "ACaslon Regular, Normal 30" );
-  pango.set_font( caslon );
+  Pango::Font caslon_small( "ACaslon Regular, Normal 20" );
 
   double right_edge = 0;
 
@@ -54,7 +54,9 @@ void glfun( int argc, char *argv[] )
   random_device rd;
   uniform_real_distribution<> dist( 0.8, 1.25 );
 
+  pango.set_font( caslon_small );
   Pango::Text seconds_label( cairo, pango, "time (s)" );
+  pango.set_font( caslon );
 
   while ( not display.window().should_close() ) {
     right_edge += 1.0 / 240.0;
