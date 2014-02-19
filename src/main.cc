@@ -62,8 +62,9 @@ void glfun( int argc, char *argv[] )
 
     Cairo::Extent<true> extent = hello.extent().to_device( cairo );
 
-    double center_x = 512 - extent.x - extent.width / 2;
-    double center_y = 384 - extent.y - extent.height / 2;
+    const auto window_size = display.window().size();
+    double center_x = window_size.first / 2 - extent.x - extent.width / 2;
+    double center_y = window_size.second / 2 - extent.y - extent.height / 2;
 
     cairo_device_to_user( cairo, &center_x, &center_y );
 
@@ -97,7 +98,6 @@ void glfun( int argc, char *argv[] )
       break;
     }
 
-    const auto window_size = display.window().size();
     if ( window_size != cairo.image().size() ) {
       display.resize( window_size );
       cairo = Cairo( window_size );
