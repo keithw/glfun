@@ -87,7 +87,7 @@ Pango::Text::Text( Cairo & cairo, Pango & pango, const string & text )
 
   pango_cairo_layout_path( cairo, pango );
 
-  path_ = unique_ptr<cairo_path_t, Deleter>( cairo_copy_path( cairo ) );
+  path_.reset( cairo_copy_path( cairo ) );
 
   /* get logical extents */
   PangoRectangle logical;

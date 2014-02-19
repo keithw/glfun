@@ -144,6 +144,11 @@ void Display::resize( const pair<unsigned int, unsigned int> & target_size )
 void Display::draw( const Image & image )
 {
   texture_.load( image );
+  repaint();
+}
+
+void Display::repaint( void )
+{
   ArrayBuffer::bind( screen_corners_ );
   texture_shader_array_object_.bind();
   texture_shader_program_.use();

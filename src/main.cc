@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <locale>
 #include <sstream>
+#include <deque>
+#include <algorithm>
 
 #include "display.hh"
 #include "cairo_objects.hh"
@@ -40,68 +42,60 @@ void glfun( int argc, char *argv[] )
   Cairo cairo( display.window().size() );
 
   Pango pango( cairo );
-  Pango::Font caslon( "ACaslon Regular, Normal 20" );
+  Pango::Font caslon( "ACaslon Regular, Normal 24" );
   pango.set_font( caslon );
 
-  float scale = 1.0;
+  double right_edge = -1;
 
-  const auto start_time = chrono::high_resolution_clock::now();
+  deque<pair<long int,Pango::Text>> labels;
 
   while ( not display.window().should_close() ) {
-    scale *= 1.0005;
+    right_edge += 1.0 / 240.0;
+
+    const auto window_size = display.window().size();
 
     cairo.mutable_image().clear();
 
-    /* draw line */
-    cairo_identity_matrix( cairo );
-    cairo_new_path( cairo );
-    cairo_set_line_width( cairo, 20 );
-    cairo_move_to( cairo, 50, 200 );
-    cairo_line_to( cairo, 400, 200 + scale * 10 );
-    cairo_line_to( cairo, 800, 200 - scale * 20 );
-    cairo_set_source_rgba( cairo, 0.75, 0, 0, 0.75 );
-    cairo_stroke( cairo );
+    const long int highest_label = lrint( floor( right_edge ) ) + 1;
 
-    /* draw text */
-    auto age = chrono::duration_cast<chrono::milliseconds>( chrono::high_resolution_clock::now() - start_time );
+    /* should we delete a label? */
+    while ( (!labels.empty()) and (labels.front().first < highest_label - 10) ) {
+      labels.pop_front();
+    }
 
-    stringstream ss;
-    ss.imbue( locale( "" ) );
-    ss << fixed << age.count() << " ms";
+    /* do we need a new label? */
+    while ( labels.empty() or (labels.back().first != highest_label) ) {
+      const long int next_label = labels.empty() ? highest_label : labels.back().first + 1;
 
-    Pango::Text hello( cairo, pango, ss.str() );
+      stringstream ss;
+      ss.imbue( locale( "" ) );
+      ss << fixed << next_label;// << " µs";
 
-    cairo_identity_matrix( cairo );
-    cairo_new_path( cairo );
-    cairo_scale( cairo, scale, scale );
-    cairo_rotate( cairo, sin( 100 * scale - 1 ) / 10 );
+      cairo_identity_matrix( cairo );
+      cairo_new_path( cairo );
+      labels.emplace_back( next_label, Pango::Text( cairo, pango, ss.str() ) );
+    }
 
-    /* center the text in the window */
-    const auto window_size = display.window().size();
-    Cairo::Extent<true> extent = hello.extent().to_device( cairo );
-    double center_x = window_size.first / 2 - extent.x - extent.width / 2;
-    double center_y = window_size.second / 2 - extent.y - extent.height / 2;
-    cairo_device_to_user( cairo, &center_x, &center_y );
-    cairo_translate( cairo, center_x, center_y );
+    /* draw the labels */
+    for ( const auto & x : labels ) {
+      /* position the text in the window */
+      cairo_identity_matrix( cairo );
+      cairo_new_path( cairo );
+      Cairo::Extent<true> extent = x.second.extent().to_device( cairo );
+      double center_x = window_size.first - extent.x - extent.width / 2 - (right_edge - x.first) * window_size.first / 5.0;
+      double center_y = window_size.second - extent.y - extent.height;
+      cairo_device_to_user( cairo, &center_x, &center_y );
+      cairo_translate( cairo, center_x, center_y );
+      cairo_append_path( cairo, x.second );
 
-    /* actually draw the text */
-    cairo_append_path( cairo, hello );
-    cairo_set_source_rgba( cairo, 0, 0, 0, 1 );
-    cairo_fill( cairo );
+      /* actually draw the text */
+      cairo_set_source_rgba( cairo, 0, 0, 0.4, 1 );
+      cairo_fill( cairo );
+    }
 
     /* draw the cairo surface on the OpenGL display */
     display.clear();
     display.draw( cairo.image() );
-
-    /* draw some straight lines using OpenGL alone */
-    vector<pair<float, float>> points;
-
-    points.emplace_back( 50, 200 );
-    points.emplace_back( 400, 200 - scale * 10 );
-    points.emplace_back( 800, 200 + scale * 20 );
-
-    display.draw( 0, 0, 1, 0.75, 20,
-		  points );
 
     /* swap buffers to reveal what has been drawn */
     display.swap();

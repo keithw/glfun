@@ -46,6 +46,8 @@ public:
 	     const std::vector<std::pair<float, float>> & vertices );
   void clear( void );
 
+  void repaint( void );
+
   void swap( void );
 
   const Window & window( void ) const { return current_context_window_.window_; }

@@ -112,9 +112,9 @@ public:
   public:
     Text( Cairo & cairo, Pango & pango, const std::string & text );
 
-    const Cairo::Extent<false> & extent( void ) { return extent_; }
+    const Cairo::Extent<false> & extent( void ) const { return extent_; }
 
-    operator cairo_path_t * () { return path_.get(); }
+    operator const cairo_path_t * () const { return path_.get(); }
   };
 
   void set_font( const Font & font );
