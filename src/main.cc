@@ -99,7 +99,8 @@ void glfun( int argc, char *argv[] )
 
     const auto window_size = display.window().size();
     if ( window_size != cairo.image().size() ) {
-      return;
+      display.resize( window_size );
+      cairo = Cairo( window_size );
     }
   }
 }
