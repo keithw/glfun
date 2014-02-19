@@ -1,12 +1,10 @@
-#include <cairo.h>
-
 #include <stdexcept>
 
 #include "cairo_objects.hh"
 
 using namespace std;
 
-int CairoContext::stride_pixels_for_width( const unsigned int width )
+int Cairo::stride_pixels_for_width( const unsigned int width )
 {
   const int stride_bytes = cairo_format_stride_for_width( CAIRO_FORMAT_ARGB32, width );
 
@@ -19,7 +17,7 @@ int CairoContext::stride_pixels_for_width( const unsigned int width )
   return stride_bytes / sizeof( Pixel );
 }
 
-CairoContext::CairoContext( const std::pair<unsigned int, unsigned int> size )
+Cairo::Cairo( const pair<unsigned int, unsigned int> size )
   : image_( size.first,
 	    size.second,
 	    stride_pixels_for_width( size.first ) ),
@@ -29,7 +27,7 @@ CairoContext::CairoContext( const std::pair<unsigned int, unsigned int> size )
   check_error();
 }
 
-CairoContext::Surface::Surface( Image & image )
+Cairo::Surface::Surface( Image & image )
   : surface( cairo_image_surface_create_for_data( image.raw_pixels(),
 						  CAIRO_FORMAT_ARGB32,
 						  image.size().first,
@@ -39,40 +37,65 @@ CairoContext::Surface::Surface( Image & image )
   check_error();
 }
 
-CairoContext::Surface::~Surface()
-{
-  cairo_surface_destroy( surface );
-}
-
-CairoContext::Context::Context( Surface & surface )
-  : context( cairo_create( surface.surface ) )
+Cairo::Context::Context( Surface & surface )
+  : context( cairo_create( surface.surface.get() ) )
 {
   check_error();
 }
 
-CairoContext::Context::~Context()
+void Cairo::Surface::check_error( void )
 {
-  cairo_destroy( context );
-}
-
-void CairoContext::Surface::check_error( void )
-{
-  const cairo_status_t surface_result = cairo_surface_status( surface );
+  const cairo_status_t surface_result = cairo_surface_status( surface.get() );
   if ( surface_result ) {
     throw runtime_error( string( "cairo surface error: " ) + cairo_status_to_string( surface_result ) );
   }
 }
 
-void CairoContext::Context::check_error( void )
+void Cairo::Context::check_error( void )
 {
-  const cairo_status_t context_result = cairo_status( context );
+  const cairo_status_t context_result = cairo_status( context.get() );
   if ( context_result ) {
     throw runtime_error( string( "cairo context error: " ) + cairo_status_to_string( context_result ) );
   }
 }
 
-void CairoContext::check_error( void )
+void Cairo::check_error( void )
 {
   context_.check_error();
   surface_.check_error();
+}
+
+Pango::Pango( Cairo & cairo )
+  : context_( pango_cairo_create_context( cairo ) )
+{}
+
+Pango::Layout::Layout( Pango & pango )
+  : layout( pango_layout_new( pango ) )
+{}
+
+Pango::Font::Font( const string & description )
+  : font( pango_font_description_from_string( description.c_str() ) )
+{}
+
+Pango::Text::Text( Cairo & cairo, Pango & pango, const string & text, const string & font )
+  : path_(),
+    extent_( { 0, 0, 0, 0 } )
+{
+  Layout layout( pango );  
+  Font font_description( font );
+  pango_layout_set_font_description( layout, font_description );
+
+  pango_layout_set_text( layout, text.data(), text.size() );
+
+  pango_cairo_layout_path( cairo, layout );
+
+  path_ = unique_ptr<cairo_path_t, Deleter>( cairo_copy_path( cairo ) );
+
+  /* get logical extents */
+  PangoRectangle logical;
+  pango_layout_get_extents( layout, nullptr, &logical );
+  extent_ = { logical.x / double( PANGO_SCALE ),
+	      logical.y / double( PANGO_SCALE ),
+	      logical.width / double( PANGO_SCALE ),
+	      logical.height / double( PANGO_SCALE ) };
 }

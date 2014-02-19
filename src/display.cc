@@ -157,7 +157,7 @@ void Display::swap( void )
 
 void Display::draw( const float red, const float green, const float blue, const float alpha,
 		    const float width,
-		    const vector<pair<uint16_t, uint16_t>> & vertices )
+		    const vector<pair<float, float>> & vertices )
 {
   ArrayBuffer::bind( other_vertices_ );
   solid_color_array_object_.bind();

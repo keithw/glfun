@@ -43,7 +43,7 @@ public:
   void draw( const Image & image );
   void draw( const float red, const float green, const float blue, const float alpha,
 	     const float width,
-	     const std::vector<std::pair<uint16_t, uint16_t>> & vertices );
+	     const std::vector<std::pair<float, float>> & vertices );
   void clear( void );
 
   void swap( void );
