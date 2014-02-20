@@ -13,7 +13,15 @@ class Graph
   Pango::Font tick_font_;
   Pango::Font label_font_;
 
+  struct YLabel
+  {
+    int height;
+    Pango::Text text;
+    float intensity;
+  };
+
   std::deque<std::pair<int, Pango::Text>> x_tick_labels_;
+  std::vector<YLabel> y_tick_labels_;
   std::deque<std::pair<float, float>> data_points_;
 
   Pango::Text x_label_;

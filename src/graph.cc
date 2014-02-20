@@ -4,6 +4,7 @@
 #include <numeric>
 #include <limits>
 #include <algorithm>
+#include <cassert>
 
 #include <iostream>
 
@@ -18,6 +19,7 @@ Graph::Graph( const unsigned int initial_width, const unsigned int initial_heigh
     tick_font_( "ACaslon Regular, Normal 30" ),
     label_font_( "ACaslon Regular, Normal 20" ),
     x_tick_labels_(),
+    y_tick_labels_(),
     data_points_(),
     x_label_( cairo_, pango_, label_font_, "time (s)" ),
     bottom_adjustment_( 1.0 ),
@@ -120,11 +122,11 @@ bool Graph::blocking_draw( const float t, const float logical_width )
 
     /* expand weakly if data stays too far inside the graph */
     if ( project_height( data_max ) < 0.667 ) {
-      top_adjustment_ = 0.025;
+      top_adjustment_ = 0.01;
     }
 
     if ( project_height( data_min ) > 0.333 ) {
-      bottom_adjustment_ = 0.025;
+      bottom_adjustment_ = 0.01;
     }
 
     /* adjust strongly if data goes outside the graph */
@@ -160,27 +162,82 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   label_bottom = (label_bottom / label_spacing) * label_spacing;
   label_top = (label_top / label_spacing) * label_spacing;
 
-  for ( int val = label_bottom; val <= label_top; val += label_spacing ) {
+  /* cull old labels */
+  {
+    auto it = y_tick_labels_.begin();
+    while ( it < y_tick_labels_.end() ) {
+      if ( it->intensity < 0.01 ) {
+	/* delete it */
+	auto it_next = it + 1;
+	y_tick_labels_.erase( it );
+	it = it_next;
+      } else {
+	it++;
+      }
+    }
+  }
 
-    if ( project_height( val ) < 0 ) {
+  /* find the labels we actually want on this frame */
+  vector<pair<int, bool>> labels_that_belong;
+
+  for ( int val = label_bottom; val <= label_top; val += label_spacing ) {
+    if ( project_height( val ) < 0 or project_height( val ) > 1 ) {
+      continue;
+    }
+
+    labels_that_belong.emplace_back( val, false );
+  }
+
+  /* adjust current labels as necessary */
+  for ( auto it = y_tick_labels_.begin(); it != y_tick_labels_.end(); it++ ) {
+    bool belongs = false;
+    for ( auto & y : labels_that_belong ) {
+      if ( it->height == y.first ) {
+	assert( y.second == false ); /* don't want duplicates */
+	y.second = true;
+	belongs = true;
+	break;
+      }
+    }
+
+    if ( belongs ) {
+      it->intensity = 0.95 * it->intensity + 0.05;
+    } else {
+      it->intensity = 0.95 * it->intensity;
+      /*
+      if ( it->intensity < 0.05 ) {
+	y_tick_labels_.erase( it );
+      }
+      */
+    }
+  }
+
+  /* add new labels if necessary */
+  for ( const auto & x : labels_that_belong ) {
+    if ( x.second ) {
+      /* already found */
       continue;
     }
 
     stringstream ss;
     ss.imbue( locale( "" ) );
-    ss << fixed << val;
+    ss << fixed << x.first;
 
-    Pango::Text label( cairo_, pango_, label_font_, ss.str() );
-    label.draw_centered_at( cairo_, 40, window_size.second * (.825*(1-project_height( val ))+.025) );
-    cairo_set_source_rgba( cairo_, 0, 0, 0.4, 1 );
+    y_tick_labels_.emplace_back( YLabel( { x.first, Pango::Text( cairo_, pango_, label_font_, ss.str() ), 0.05 } ) );
+  }
+
+  /* go through and paint all the labels */
+  for ( const auto & x : y_tick_labels_ ) {
+    x.text.draw_centered_at( cairo_, 40, window_size.second * (.825*(1-project_height( x.height ))+.025) );
+    cairo_set_source_rgba( cairo_, 0, 0, 0.4, x.intensity );
     cairo_fill( cairo_ );
 
     /* draw horizontal grid line */
     cairo_identity_matrix( cairo_ );
     cairo_set_line_width( cairo_, 1 );
-    cairo_move_to( cairo_, 80, window_size.second * (.825*(1-project_height( val ))+.025) );
-    cairo_line_to( cairo_, window_size.first, window_size.second * (.825*(1-project_height( val ))+.025) );
-    cairo_set_source_rgba( cairo_, 0, 0, 0.4, 0.25 );
+    cairo_move_to( cairo_, 80, window_size.second * (.825*(1-project_height( x.height ))+.025) );
+    cairo_line_to( cairo_, window_size.first, window_size.second * (.825*(1-project_height( x.height ))+.025) );
+    cairo_set_source_rgba( cairo_, 0, 0, 0.4, 0.25 * x.intensity );
     cairo_stroke( cairo_ );
   }
 
