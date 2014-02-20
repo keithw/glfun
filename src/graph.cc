@@ -105,7 +105,7 @@ bool Graph::blocking_draw( const float t, const float logical_width )
 				   return min( x, y.second ); } );
 
     /* stop adjusting if data is good enough */
-    if ( project_height( data_max ) > 0.8 and project_height( data_min ) < 0.2 ) {
+    if ( project_height( data_max ) > 0.75 and project_height( data_min ) < 0.25 ) {
       adjusting_limits_ = false;
     }
 
@@ -115,7 +115,7 @@ bool Graph::blocking_draw( const float t, const float logical_width )
     }
 
     /* should adjust if data stays too far inside the graph */
-    if ( project_height( data_max ) < 0.6 or project_height( data_min ) > 0.4 ) {
+    if ( project_height( data_max ) < 0.5 or project_height( data_min ) > 0.5 ) {
       adjusting_limits_ = true;
     }
 
