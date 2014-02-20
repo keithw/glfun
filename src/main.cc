@@ -38,7 +38,7 @@ void glfun( int argc, char *argv[] )
 
     graph.set_window( t, 5.0 );
 
-    graph.add_data_point( t, floor( t * 5.0 ) / 20.0 );
+    graph.add_data_point( t, sin( t ) );
 
     if ( graph.blocking_draw( t, 5.0 ) ) {
       break;
