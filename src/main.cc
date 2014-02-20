@@ -32,7 +32,7 @@ void glfun( int argc, char *argv[] )
   Graph graph( 1024, 768, "Ratatouille" );
 
   random_device rd;
-  uniform_int_distribution<> dist( -1, 1 );
+  uniform_real_distribution<> dist( -1, 1 );
 
   float t = 0;
 
@@ -45,7 +45,7 @@ void glfun( int argc, char *argv[] )
     graph.set_window( t, 5.0 );
 
     if ( t - last_x > 0.05 ) {
-      val += dist( rd );
+      val += dist( rd ) * t;
       graph.add_data_point( t, val );
       last_x = t;
     }
