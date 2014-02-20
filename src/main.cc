@@ -141,7 +141,7 @@ void glfun( int argc, char *argv[] )
     data_points.emplace_back( right_edge + 20, data_points.back().second );
 
     /* draw the data points */
-    display.draw( 0.0, 0.4, 0.0, 0.75, 5.0, data_points,
+    display.draw( 1.0, 0.38, 0.0, 0.75, 5.0, data_points,
 		  [&] ( const pair<float, float> & x ) {
 		    return make_pair( window_size.first - (right_edge - x.first) * window_size.first / 5.0,
 				      window_size.second * x.second );
