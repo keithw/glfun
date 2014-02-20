@@ -153,7 +153,7 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   cairo_fill( cairo_ );
 
   /* draw the y-axis label */
-  y_label_.draw_centered_rotated_at( cairo_, 25, window_size.second / 2 );
+  y_label_.draw_centered_rotated_at( cairo_, 25, window_size.second * .4375 );
   cairo_set_source_rgba( cairo_, 0, 0, 0.4, 1 );
   cairo_fill( cairo_ );
 
