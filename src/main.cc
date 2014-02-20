@@ -40,9 +40,9 @@ void glfun( int argc, char *argv[] )
   float last_x = t;
 
   while ( true ) {
-    t += 1.0 / 240.0;
+    t += 1.0 / 480.0;
 
-    graph.set_window( t, 5.0 );
+    graph.set_window( t, 3 );
 
     if ( t - last_x > 0.05 ) {
       val += dist( rd ) * t;
@@ -50,7 +50,7 @@ void glfun( int argc, char *argv[] )
       last_x = t;
     }
 
-    if ( graph.blocking_draw( t, 5.0 ) ) {
+    if ( graph.blocking_draw( t, 3 ) ) {
       break;
     }
   }

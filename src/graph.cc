@@ -139,8 +139,8 @@ bool Graph::blocking_draw( const float t, const float logical_width )
       bottom_adjustment_ = 0.05;
     }
 
-    top_ = top_ * (1 - top_adjustment_) + (data_max + 0.05 * (data_max - data_min)) * top_adjustment_;
-    bottom_ = bottom_ * (1 - bottom_adjustment_) + (data_min - 0.05 * (data_max - data_min)) * bottom_adjustment_;
+    top_ = top_ * (1 - top_adjustment_) + (data_max + 0.15 * (data_max - data_min)) * top_adjustment_;
+    bottom_ = bottom_ * (1 - bottom_adjustment_) + (data_min - 0.15 * (data_max - data_min)) * bottom_adjustment_;
   }
 
   /* draw the y-axis labels */
