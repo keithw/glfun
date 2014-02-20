@@ -65,6 +65,11 @@ void Window::swap_buffers( void )
   return glfwSwapBuffers( window_.get() );
 }
 
+void Window::hide_cursor( const bool hidden )
+{
+  glfwSetInputMode( window_.get(), GLFW_CURSOR, hidden ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL );
+}
+
 bool Window::key_pressed( const int key ) const
 {
   return GLFW_PRESS == glfwGetKey( window_.get(), key );

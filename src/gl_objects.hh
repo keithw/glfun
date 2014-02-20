@@ -36,6 +36,7 @@ public:
   void make_context_current( const bool initialize_extensions = false );
   bool should_close( void ) const;
   void swap_buffers( void );
+  void hide_cursor( const bool hidden );
   bool key_pressed( const int key ) const;
   std::pair<unsigned int, unsigned int> size( void ) const;
 };
