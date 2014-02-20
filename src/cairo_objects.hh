@@ -127,6 +127,7 @@ public:
     const Cairo::Extent<false> & extent( void ) const { return extent_; }
 
     void draw_centered_at( Cairo & cairo, const double x, const double y ) const;
+    void draw_centered_rotated_at( Cairo & cairo, const double x, const double y ) const;
 
     operator const cairo_path_t * () const { return path_.get(); }
   };

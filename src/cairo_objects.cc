@@ -117,6 +117,23 @@ void Pango::Text::draw_centered_at( Cairo & cairo, const double x, const double 
   cairo_append_path( cairo, path_.get() );
 }
 
+void Pango::Text::draw_centered_rotated_at( Cairo & cairo, const double x, const double y ) const
+{
+  cairo_identity_matrix( cairo );
+  cairo_new_path( cairo );
+
+  cairo_rotate( cairo, - 3.1415926 / 2.0 );
+
+  Cairo::Extent<true> my_extent = extent().to_device( cairo );
+
+  double center_x = x - my_extent.x - my_extent.width / 2;
+  double center_y = y - my_extent.y - my_extent.height / 2;
+
+  cairo_device_to_user( cairo, &center_x, &center_y );
+  cairo_translate( cairo, center_x, center_y );
+  cairo_append_path( cairo, path_.get() );
+}
+
 Cairo::Pattern::Pattern( cairo_pattern_t * pattern )
   : pattern_( pattern )
 {

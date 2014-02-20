@@ -25,11 +25,16 @@ class Graph
   std::deque<std::pair<float, float>> data_points_;
 
   Pango::Text x_label_;
+  Pango::Text y_label_;
 
   float bottom_adjustment_, top_adjustment_;
   float bottom_, top_;
 
   float project_height( const float x ) const { return ( x - bottom_ ) / ( top_ - bottom_ ); }
+  float chart_height( const float x, const unsigned int window_height ) const
+  {
+    return window_height * (.825*(1-project_height( x ))+.025);
+  }
 
   Cairo::Pattern horizontal_fadeout_;
 

@@ -22,11 +22,12 @@ Graph::Graph( const unsigned int initial_width, const unsigned int initial_heigh
     y_tick_labels_(),
     data_points_(),
     x_label_( cairo_, pango_, label_font_, "time (s)" ),
+    y_label_( cairo_, pango_, label_font_, "packets in flight" ),
     bottom_adjustment_( 1.0 ),
     top_adjustment_( 1.0 ),
     bottom_( 0 ),
     top_( 1 ),
-    horizontal_fadeout_( cairo_pattern_create_linear( 0, 0, 120, 0 ) )
+    horizontal_fadeout_( cairo_pattern_create_linear( 0, 0, 190, 0 ) )
 {
   cairo_pattern_add_color_stop_rgba( horizontal_fadeout_, 0.0, 1, 1, 1, 1 );
   cairo_pattern_add_color_stop_rgba( horizontal_fadeout_, 0.67, 1, 1, 1, 1 );
@@ -97,7 +98,7 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   }
 
   /* draw the x-axis label */
-  x_label_.draw_centered_at( cairo_, window_size.first / 2, window_size.second * 9.6 / 10.0 );
+  x_label_.draw_centered_at( cairo_, 35 + window_size.first / 2, window_size.second * 9.6 / 10.0 );
   cairo_set_source_rgba( cairo_, 0, 0, 0.4, 1 );
   cairo_fill( cairo_ );
 
@@ -147,8 +148,13 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   /* draw a box to hide other labels */
   cairo_new_path( cairo_ );
   cairo_identity_matrix( cairo_ );
-  cairo_rectangle( cairo_, 0, 0, 120, window_size.second );
+  cairo_rectangle( cairo_, 0, 0, 190, window_size.second );
   cairo_set_source( cairo_, horizontal_fadeout_ );
+  cairo_fill( cairo_ );
+
+  /* draw the y-axis label */
+  y_label_.draw_centered_rotated_at( cairo_, 20, window_size.second / 2 );
+  cairo_set_source_rgba( cairo_, 0, 0, 0.4, 1 );
   cairo_fill( cairo_ );
 
   int label_bottom = to_int( floor( bottom_ ) );
@@ -228,15 +234,15 @@ bool Graph::blocking_draw( const float t, const float logical_width )
 
   /* go through and paint all the labels */
   for ( const auto & x : y_tick_labels_ ) {
-    x.text.draw_centered_at( cairo_, 40, window_size.second * (.825*(1-project_height( x.height ))+.025) );
+    x.text.draw_centered_at( cairo_, 90, chart_height( x.height, window_size.second ) );
     cairo_set_source_rgba( cairo_, 0, 0, 0.4, x.intensity );
     cairo_fill( cairo_ );
 
     /* draw horizontal grid line */
     cairo_identity_matrix( cairo_ );
     cairo_set_line_width( cairo_, 1 );
-    cairo_move_to( cairo_, 80, window_size.second * (.825*(1-project_height( x.height ))+.025) );
-    cairo_line_to( cairo_, window_size.first, window_size.second * (.825*(1-project_height( x.height ))+.025) );
+    cairo_move_to( cairo_, 140, chart_height( x.height, window_size.second ) );
+    cairo_line_to( cairo_, window_size.first, chart_height( x.height, window_size.second ) );
     cairo_set_source_rgba( cairo_, 0, 0, 0.4, 0.25 * x.intensity );
     cairo_stroke( cairo_ );
   }
@@ -247,10 +253,10 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   /* draw the data points, including an extension off the right edge */
   if ( not data_points_.empty() ) {
     data_points_.emplace_back( t + 20, data_points_.back().second );
-    display_.draw( 1.0, 0.38, 0.0, 0.75, 5.0, 120, data_points_,
+    display_.draw( 1.0, 0.38, 0.0, 0.75, 5.0, 220, data_points_,
 		   [&] ( const pair<float, float> & x ) {
 		     return make_pair( window_size.first - (t - x.first) * window_size.first / logical_width,
-				       window_size.second * (.825*(1-project_height( x.second ))+.025) );
+				       chart_height( x.second, window_size.second ) );
 		   } );
     data_points_.pop_back();
   }  
