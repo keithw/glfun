@@ -23,6 +23,8 @@ class Graph
 
   float project_height( const float x ) const { return ( x - bottom_ ) / ( top_ - bottom_ ); }
 
+  Cairo::Pattern horizontal_fadeout_;
+
 public:
   Graph( const unsigned int initial_width, const unsigned int initial_height, const std::string & title );
 

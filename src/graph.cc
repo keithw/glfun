@@ -23,8 +23,13 @@ Graph::Graph( const unsigned int initial_width, const unsigned int initial_heigh
     bottom_adjustment_( 1.0 ),
     top_adjustment_( 1.0 ),
     bottom_( 0 ),
-    top_( 1 )
-{}
+    top_( 1 ),
+    horizontal_fadeout_( cairo_pattern_create_linear( 0, 0, 120, 0 ) )
+{
+  cairo_pattern_add_color_stop_rgba( horizontal_fadeout_, 0.0, 1, 1, 1, 1 );
+  cairo_pattern_add_color_stop_rgba( horizontal_fadeout_, 0.67, 1, 1, 1, 1 );
+  cairo_pattern_add_color_stop_rgba( horizontal_fadeout_, 1.0, 1, 1, 1, 0 );
+}
 
 void Graph::set_window( const float t, const float logical_width )
 {
@@ -140,14 +145,9 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   /* draw a box to hide other labels */
   cairo_new_path( cairo_ );
   cairo_identity_matrix( cairo_ );
-  cairo_pattern_t * pattern = cairo_pattern_create_linear( 0, 0, 80, 0 );
-  cairo_pattern_add_color_stop_rgba( pattern, 0.0, 1, 1, 1, 1 );
-  cairo_pattern_add_color_stop_rgba( pattern, 0.5, 1, 1, 1, 1 );
-  cairo_pattern_add_color_stop_rgba( pattern, 1.0, 1, 1, 1, 0 );
-  cairo_rectangle( cairo_, 0, 0, 80, window_size.second );
-  cairo_set_source( cairo_, pattern );
+  cairo_rectangle( cairo_, 0, 0, 120, window_size.second );
+  cairo_set_source( cairo_, horizontal_fadeout_ );
   cairo_fill( cairo_ );
-  cairo_pattern_destroy( pattern );
 
   int label_bottom = to_int( floor( bottom_ ) );
   int label_top = to_int( ceil( top_ ) );
@@ -183,18 +183,6 @@ bool Graph::blocking_draw( const float t, const float logical_width )
     cairo_set_source_rgba( cairo_, 0, 0, 0.4, 0.25 );
     cairo_stroke( cairo_ );
   }
-
-  /* draw label box on top */
-  cairo_new_path( cairo_ );
-  cairo_identity_matrix( cairo_ );
-  pattern = cairo_pattern_create_linear( 0, 0, 0, 40 );
-  cairo_pattern_add_color_stop_rgba( pattern, 0.0, 1, 1, 1, 1 );
-  cairo_pattern_add_color_stop_rgba( pattern, 1.0, 1, 1, 1, 0 );
-
-  cairo_rectangle( cairo_, 0, 0, 80, 80 );
-  cairo_set_source( cairo_, pattern );
-  cairo_fill( cairo_ );
-  cairo_pattern_destroy( pattern );
 
   /* draw the cairo surface on the OpenGL display */
   display_.draw( cairo_.image() );

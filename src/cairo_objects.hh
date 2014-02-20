@@ -75,6 +75,18 @@ public:
       return Extent<true>( { x1, y1, x2 - x1, y2 - y1 } );
     }
   };
+
+  class Pattern
+  {
+    struct Deleter { void operator() ( cairo_pattern_t * x ) { cairo_pattern_destroy( x ); } };    
+
+    std::unique_ptr<cairo_pattern_t, Deleter> pattern_;    
+
+  public:
+    Pattern( cairo_pattern_t * pattern );
+
+    operator cairo_pattern_t * () { return pattern_.get(); }
+  };
 };
 
 template <class T>

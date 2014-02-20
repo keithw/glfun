@@ -116,3 +116,12 @@ void Pango::Text::draw_centered_at( Cairo & cairo, const double x, const double 
   cairo_translate( cairo, center_x, center_y );
   cairo_append_path( cairo, path_.get() );
 }
+
+Cairo::Pattern::Pattern( cairo_pattern_t * pattern )
+  : pattern_( pattern )
+{
+  const cairo_status_t pattern_result = cairo_pattern_status( pattern_.get() );
+  if ( pattern_result ) {
+    throw runtime_error( string( "cairo pattern error: " ) + cairo_status_to_string( pattern_result ) );
+  }  
+}
