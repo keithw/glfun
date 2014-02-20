@@ -5,6 +5,8 @@
 #include <limits>
 #include <algorithm>
 
+#include <iostream>
+
 #include "graph.hh"
 
 using namespace std;
@@ -92,10 +94,7 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   cairo_set_source_rgba( cairo_, 0, 0, 0.4, 1 );
   cairo_fill( cairo_ );
 
-  /* draw the cairo surface on the OpenGL display */
-  display_.draw( cairo_.image() );
-
-  /* draw the data points, including an extension off the screen */
+  /* autoscale vertically */
   if ( not data_points_.empty() ) {
     /* adjust bottom and top */
     float data_max = accumulate( data_points_.begin(), data_points_.end(), numeric_limits<float>::min(),
@@ -116,11 +115,11 @@ bool Graph::blocking_draw( const float t, const float logical_width )
 
     /* expand weakly if data stays too far inside the graph */
     if ( project_height( data_max ) < 0.667 ) {
-      top_adjustment_ = 0.01;
+      top_adjustment_ = 0.025;
     }
 
     if ( project_height( data_min ) > 0.333 ) {
-      bottom_adjustment_ = 0.01;
+      bottom_adjustment_ = 0.025;
     }
 
     /* adjust strongly if data goes outside the graph */
@@ -134,15 +133,82 @@ bool Graph::blocking_draw( const float t, const float logical_width )
 
     top_ = top_ * (1 - top_adjustment_) + data_max * top_adjustment_;
     bottom_ = bottom_ * (1 - bottom_adjustment_) + data_min * bottom_adjustment_;
+  }
 
+  /* draw the y-axis labels */
+
+  /* draw a box to hide other labels */
+  cairo_new_path( cairo_ );
+  cairo_identity_matrix( cairo_ );
+  cairo_pattern_t * pattern = cairo_pattern_create_linear( 0, 0, 80, 0 );
+  cairo_pattern_add_color_stop_rgba( pattern, 0.0, 1, 1, 1, 1 );
+  cairo_pattern_add_color_stop_rgba( pattern, 0.5, 1, 1, 1, 1 );
+  cairo_pattern_add_color_stop_rgba( pattern, 1.0, 1, 1, 1, 0 );
+  cairo_rectangle( cairo_, 0, 0, 80, window_size.second );
+  cairo_set_source( cairo_, pattern );
+  cairo_fill( cairo_ );
+  cairo_pattern_destroy( pattern );
+
+  int label_bottom = to_int( floor( bottom_ ) );
+  int label_top = to_int( ceil( top_ ) );
+  int label_spacing = 1;
+
+  while ( label_spacing < (label_top - label_bottom) / 4 ) {
+    label_spacing *= 2;
+  }
+
+  label_bottom = (label_bottom / label_spacing) * label_spacing;
+  label_top = (label_top / label_spacing) * label_spacing;
+
+  for ( int val = label_bottom; val <= label_top; val += label_spacing ) {
+
+    if ( project_height( val ) < 0 ) {
+      continue;
+    }
+
+    stringstream ss;
+    ss.imbue( locale( "" ) );
+    ss << fixed << val;
+
+    Pango::Text label( cairo_, pango_, label_font_, ss.str() );
+    label.draw_centered_at( cairo_, 40, window_size.second * (.825*(1-project_height( val ))+.025) );
+    cairo_set_source_rgba( cairo_, 0, 0, 0.4, 1 );
+    cairo_fill( cairo_ );
+
+    /* draw horizontal grid line */
+    cairo_identity_matrix( cairo_ );
+    cairo_set_line_width( cairo_, 1 );
+    cairo_move_to( cairo_, 80, window_size.second * (.825*(1-project_height( val ))+.025) );
+    cairo_line_to( cairo_, window_size.first, window_size.second * (.825*(1-project_height( val ))+.025) );
+    cairo_set_source_rgba( cairo_, 0, 0, 0.4, 0.25 );
+    cairo_stroke( cairo_ );
+  }
+
+  /* draw label box on top */
+  cairo_new_path( cairo_ );
+  cairo_identity_matrix( cairo_ );
+  pattern = cairo_pattern_create_linear( 0, 0, 0, 40 );
+  cairo_pattern_add_color_stop_rgba( pattern, 0.0, 1, 1, 1, 1 );
+  cairo_pattern_add_color_stop_rgba( pattern, 1.0, 1, 1, 1, 0 );
+
+  cairo_rectangle( cairo_, 0, 0, 80, 80 );
+  cairo_set_source( cairo_, pattern );
+  cairo_fill( cairo_ );
+  cairo_pattern_destroy( pattern );
+
+  /* draw the cairo surface on the OpenGL display */
+  display_.draw( cairo_.image() );
+
+  /* draw the data points, including an extension off the right edge */
+  if ( not data_points_.empty() ) {
     data_points_.emplace_back( t + 20, data_points_.back().second );
-    display_.draw( 1.0, 0.38, 0.0, 0.75, 5.0, data_points_,
+    display_.draw( 1.0, 0.38, 0.0, 0.75, 5.0, 120, data_points_,
 		   [&] ( const pair<float, float> & x ) {
 		     return make_pair( window_size.first - (t - x.first) * window_size.first / logical_width,
 				       window_size.second * (.825*(1-project_height( x.second ))+.025) );
 		   } );
     data_points_.pop_back();
-  }
+  }  
 
   /* swap buffers to reveal what has been drawn */
   display_.swap();

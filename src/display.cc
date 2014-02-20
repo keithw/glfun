@@ -40,13 +40,18 @@ const std::string Display::shader_source_solid_color
 = R"( #version 140
 
       uniform vec4 color;
+      uniform float cutoff;
 
       in vec2 raw_position;
       out vec4 outColor;
 
       void main()
       {
-        outColor = color;
+        if ( raw_position.x < cutoff ) {
+          outColor = mix( color, vec4( color.x, color.y, color.z, 0 ), (cutoff - raw_position.x) / (cutoff / 3.0) );
+        } else {
+          outColor = color;
+        }
       }
     )";
 
@@ -162,6 +167,7 @@ void Display::swap( void )
 
 void Display::draw( const float red, const float green, const float blue, const float alpha,
 		    const float width,
+		    const float cutoff,
 		    const deque<pair<float, float>> & vertices,
 		    const std::function<std::pair<float, float>(const std::pair<float, float> &)> & transform )
 {
@@ -174,7 +180,7 @@ void Display::draw( const float red, const float green, const float blue, const 
   vector<pair<float, float>> triangles;
 
   for ( auto it = vertices.begin(); it < vertices.end() - 1; it++ ) {
-    const auto start = transform( *it );
+    auto start = transform( *it );
     const auto end = transform( *(it + 1) );
 
     /* horizontal portion */
@@ -216,6 +222,9 @@ void Display::draw( const float red, const float green, const float blue, const 
   solid_color_shader_program_.use();
   glUniform4f( solid_color_shader_program_.uniform_location( "color" ),
 	       red, green, blue, alpha );
+
+  glUniform1f( solid_color_shader_program_.uniform_location( "cutoff" ),
+	       cutoff );
 
   glDrawArrays( GL_TRIANGLES, 0, triangles.size() );
 }

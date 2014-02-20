@@ -43,6 +43,7 @@ public:
   void draw( const Image & image );
   void draw( const float red, const float green, const float blue, const float alpha,
 	     const float width,
+	     const float cutoff,
 	     const std::deque<std::pair<float, float>> & vertices,
 	     const std::function<std::pair<float, float>(const std::pair<float, float> &)> & transform );
   void clear( void );
