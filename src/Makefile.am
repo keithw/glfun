@@ -7,4 +7,5 @@ glfun_SOURCES = main.cc \
 	gl_objects.hh gl_objects.cc \
 	display.hh display.cc \
 	image.hh image.cc \
-	cairo_objects.hh cairo_objects.cc
+	cairo_objects.hh cairo_objects.cc \
+	graph.hh graph.cc
