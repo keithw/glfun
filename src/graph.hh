@@ -18,7 +18,7 @@ class Graph
 
   Pango::Text x_label_;
 
-  bool adjusting_limits_;
+  float bottom_adjustment_, top_adjustment_;
   float bottom_, top_;
 
   float project_height( const float x ) const { return ( x - bottom_ ) / ( top_ - bottom_ ); }

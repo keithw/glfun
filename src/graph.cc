@@ -18,7 +18,8 @@ Graph::Graph( const unsigned int initial_width, const unsigned int initial_heigh
     x_tick_labels_(),
     data_points_(),
     x_label_( cairo_, pango_, label_font_, "time (s)" ),
-    adjusting_limits_( true ),
+    bottom_adjustment_( 1.0 ),
+    top_adjustment_( 1.0 ),
     bottom_( 0 ),
     top_( 1 )
 {}
@@ -104,25 +105,35 @@ bool Graph::blocking_draw( const float t, const float logical_width )
 				 [] ( const float x, const pair<float, float> & y ) {
 				   return min( x, y.second ); } );
 
-    /* stop adjusting if data is good enough */
-    if ( project_height( data_max ) > 0.75 and project_height( data_min ) < 0.25 ) {
-      adjusting_limits_ = false;
+    /* stop adjusting if data are good enough */
+    if ( project_height( data_max ) > 0.833 ) {
+      top_adjustment_ *= 0.95;
     }
 
-    /* must adjust if data goes outside the graph */
-    if ( project_height( data_max ) > 1.0 or project_height( data_min ) < 0.0 ) {
-      adjusting_limits_ = true;
+    if ( project_height( data_min ) < 0.167 ) {
+      bottom_adjustment_ *= 0.95;
     }
 
-    /* should adjust if data stays too far inside the graph */
-    if ( project_height( data_max ) < 0.5 or project_height( data_min ) > 0.5 ) {
-      adjusting_limits_ = true;
+    /* expand weakly if data stays too far inside the graph */
+    if ( project_height( data_max ) < 0.667 ) {
+      top_adjustment_ = 0.01;
     }
 
-    if ( adjusting_limits_ ) {
-      top_ = top_ * .95 + data_max * .05;
-      bottom_ = bottom_ * .95 + data_min * .05;
+    if ( project_height( data_min ) > 0.333 ) {
+      bottom_adjustment_ = 0.01;
     }
+
+    /* adjust strongly if data goes outside the graph */
+    if ( project_height( data_max ) > 1.0 ) {
+      top_adjustment_ = 0.05;
+    }
+
+    if ( project_height( data_min ) < 0.0 ) {
+      bottom_adjustment_ = 0.05;
+    }
+
+    top_ = top_ * (1 - top_adjustment_) + data_max * top_adjustment_;
+    bottom_ = bottom_ * (1 - bottom_adjustment_) + data_min * bottom_adjustment_;
 
     data_points_.emplace_back( t + 20, data_points_.back().second );
     display_.draw( 1.0, 0.38, 0.0, 0.75, 5.0, data_points_,
