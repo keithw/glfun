@@ -110,7 +110,7 @@ public:
     Cairo::Extent<false> extent_;
 
   public:
-    Text( Cairo & cairo, Pango & pango, const std::string & text );
+    Text( Cairo & cairo, Pango & pango, const Font & font, const std::string & text );
 
     const Cairo::Extent<false> & extent( void ) const { return extent_; }
 

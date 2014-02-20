@@ -79,12 +79,14 @@ void Pango::set_font( const Pango::Font & font )
   pango_layout_set_font_description( *this, font );
 }
 
-Pango::Text::Text( Cairo & cairo, Pango & pango, const string & text )
+Pango::Text::Text( Cairo & cairo, Pango & pango, const Font & font, const string & text )
   : path_(),
     extent_( { 0, 0, 0, 0 } )
 {
   cairo_identity_matrix( cairo );
   cairo_new_path( cairo );
+
+  pango.set_font( font );
 
   pango_layout_set_text( pango, text.data(), text.size() );
 

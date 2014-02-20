@@ -54,9 +54,7 @@ void glfun( int argc, char *argv[] )
   random_device rd;
   uniform_real_distribution<> dist( 0.8, 1.25 );
 
-  pango.set_font( caslon_small );
-  Pango::Text seconds_label( cairo, pango, "time (s)" );
-  pango.set_font( caslon );
+  Pango::Text seconds_label( cairo, pango, caslon_small, "time (s)" );
 
   while ( not display.window().should_close() ) {
     right_edge += 1.0 / 240.0;
@@ -80,7 +78,7 @@ void glfun( int argc, char *argv[] )
       ss.imbue( locale( "" ) );
       ss << fixed << next_label;// << " µs";
 
-      labels.emplace_back( next_label, Pango::Text( cairo, pango, ss.str() ) );
+      labels.emplace_back( next_label, Pango::Text( cairo, pango, caslon, ss.str() ) );
     }
 
     /* draw the labels */
