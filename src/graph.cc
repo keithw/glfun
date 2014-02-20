@@ -123,20 +123,20 @@ bool Graph::blocking_draw( const float t, const float logical_width )
 
     /* expand weakly if data stays too far inside the graph */
     if ( project_height( data_max ) < 0.667 ) {
-      top_adjustment_ = 0.02;
+      top_adjustment_ = min( 0.02, top_adjustment_ + 0.02 / 15.0 );
     }
 
     if ( project_height( data_min ) > 0.333 ) {
-      bottom_adjustment_ = 0.02;
+      bottom_adjustment_ = min( 0.02, bottom_adjustment_ + 0.02 / 15.0 );
     }
 
     /* adjust strongly if data goes outside the graph */
     if ( project_height( data_max ) > 1.0 ) {
-      top_adjustment_ = 0.05;
+      top_adjustment_ = min( 0.05, top_adjustment_ + 0.05 / 15.0 );
     }
 
     if ( project_height( data_min ) < 0.0 ) {
-      bottom_adjustment_ = 0.05;
+      bottom_adjustment_ = min( 0.05, bottom_adjustment_ + 0.05 / 15.0 );
     }
 
     top_ = top_ * (1 - top_adjustment_) + (data_max + 0.15 * (data_max - data_min)) * top_adjustment_;
