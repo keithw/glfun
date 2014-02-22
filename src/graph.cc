@@ -267,7 +267,7 @@ bool Graph::blocking_draw( const float t, const float logical_width )
   /* should we quit? */
   glfwPollEvents();
 
-  if ( display_.window().key_pressed( GLFW_KEY_ESCAPE ) ) {
+  if ( display_.window().key_pressed( GLFW_KEY_ESCAPE ) or display_.window().should_close() ) {
     return true;
   }
 
